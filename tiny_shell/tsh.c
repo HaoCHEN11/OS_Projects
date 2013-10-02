@@ -34,7 +34,7 @@
 	#include <stdlib.h>
 	#include <signal.h>
         #include <string.h>
-
+    #include <stdio.h>
   /************Private include**********************************************/
 	#include "tsh.h"
 	#include "io.h"
@@ -72,7 +72,9 @@ int main (int argc, char *argv[])
 	while (!forceExit) /* repeat forever */
 	{
 		/* read command line */
-		getCommandLine(&cmdLine, BUFSIZE);
+		printf("Hao@tsh>");
+        fflush(stdout);
+        getCommandLine(&cmdLine, BUFSIZE);
 
         if(strcmp(cmdLine, "exit") == 0)
         {
