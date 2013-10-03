@@ -213,12 +213,21 @@ static bool ResolveExternalCmd(commandT* cmd)
 
         static bool IsBuiltIn(char* cmd)
         {
+            //Check four built-in commands -- bg, fg, jobs, alias.
+            if (strcmp(cmd, "bg") == 0) return TRUE;
+            if (strcmp(cmd, "fg") == 0) return TRUE;
+            if (strcmp(cmd, "jobs") == 0) return TRUE;
+            if (strcmp(cmd, "alias") == 0) return TRUE;
         	return FALSE;     
         }
 
    
 	static void RunBuiltInCmd(commandT* cmd)
 	{
+            //NEED modified;
+            if (strcmp(cmd -> cmdline, "bg") == 0) {
+                printf("bg need implement.");    
+            }
 	}
 
         void CheckJobs()
