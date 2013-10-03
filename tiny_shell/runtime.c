@@ -85,6 +85,8 @@
 	static void RunBuiltInCmd(commandT*);
 	/* checks whether a command is a builtin command */
 	static bool IsBuiltIn(char*);
+    /*Util function to debug;*/
+    static void PrintBGJobs();
   /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
@@ -119,6 +121,7 @@
 	void RunCmdBg(commandT* cmd)
 	{
 		// TODO
+        PrintBGJobs();
 	}
 
 	void RunCmdPipe(commandT* cmd1, commandT* cmd2)
@@ -137,7 +140,8 @@
 /*Try to run an external command*/
 static void RunExternalCmd(commandT* cmd, bool fork)
 {
-  if (ResolveExternalCmd(cmd)){
+  if (ResolveExternalCmd(cmd)){ 
+    if (cmd -> bg == 1) RunCmdBg(cmd);
     Exec(cmd, fork);
   }
   else {
@@ -205,7 +209,27 @@ static bool ResolveExternalCmd(commandT* cmd)
                 execv(cmd->name,cmd->argv);
                 return;
             }else { // parent process.
-                wait(NULL);
+                if (cmd -> bg == 1) { //A command with &, so parent will keep executing.
+                    //Append the child process into list;
+                    bgjobL *bgjob = (bgjobL*) malloc (sizeof(bgjobL));
+                    bgjob -> pid = pid;
+                    bgjob -> next = NULL;
+
+                    if (bgjobs == NULL) bgjobs = bgjob;
+                    else {
+                        bgjobL *current = bgjobs;
+                        while (1) {
+                            if (current -> next == NULL) {
+                                current -> next = bgjob;
+                                break;
+                            }
+                            current = current -> next;
+                        } 
+                    }
+                    
+                } else { // Parent process wait for child terminate.
+                    wait(NULL); 
+                }
             }
 
         }
@@ -259,4 +283,22 @@ void ReleaseCmdT(commandT **cmd){
   for(i = 0; i < (*cmd)->argc; i++)
     if((*cmd)->argv[i] != NULL) free((*cmd)->argv[i]);
   free(*cmd);
+}
+
+/*********************Utils****************************************/
+void PrintBGJobs() {
+    if (bgjobs == NULL) printf("No background job!");
+    else {
+        bgjobL *current = bgjobs;
+        int count = 0;
+        while (1) {
+        if (current -> next == NULL) {
+                printf ("Job id: %d \n", count);
+                break;
+        }
+        printf ("Job id:  %d \n", count );
+        current = current -> next;
+        count++;
+        } 
+    }
 }
