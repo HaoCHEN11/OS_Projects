@@ -244,7 +244,6 @@ static bool ResolveExternalCmd(commandT* cmd)
             }
             if(pid ==0){ // child process.
                 execv(cmd->name,cmd->argv);
-                return;
             }else { // parent process.
                 if (cmd -> bg == 1) { //A command with &, so parent will keep executing.
                     //Append the child process into list;
@@ -253,7 +252,7 @@ static bool ResolveExternalCmd(commandT* cmd)
                     bgjob -> pid = pid;
                     bgjob -> next = NULL;
 
-                    int bgJobNumber = 1;
+                    int bgJobNumber = 0;
 
                     if (bgjobs == NULL){ 
                         bgjobs = (bgjobL *)malloc(sizeof(bgjobL));
@@ -269,14 +268,10 @@ static bool ResolveExternalCmd(commandT* cmd)
                         bgJobNumber++;
                     } 
                     printf("[%d] %d \n", bgJobNumber, pid); 
-                    // wait(NULL); 
-                    //int id = waitpid(pid, NULL, WNOHANG); 
-                    //printf("\n================== %d", id );
-                    // if (id == pid) printf("ri o!");
-                    // if(id == 0 ) printf("i m dead.");
+                
                 } else { // Parent process wait for child terminate.
                     fg_job = pid;
-                    waitpid(-1,NULL,WUNTRACED); 
+                     waitpid(-1,NULL,WUNTRACED);
                 }
             }
 
@@ -304,7 +299,7 @@ static bool ResolveExternalCmd(commandT* cmd)
 
         void CheckJobs()
 	{
-           // PrintBGJobs();
+           PrintBGJobs();
  	}
 
 
@@ -336,6 +331,7 @@ void ReleaseCmdT(commandT **cmd){
 
 /*********************Utils****************************************/
 void PrintBGJobs() {
+    if (bgjobs == NULL) return;
     bgjobL* head = bgjobs;
     if (head->next == NULL) {
         printf("No background job!");
