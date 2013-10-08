@@ -68,6 +68,7 @@ int main (int argc, char *argv[])
 	/* shell initialization */
 	if (signal(SIGINT, sig) == SIG_ERR) PrintPError("SIGINT");
 	if (signal(SIGTSTP, sig) == SIG_ERR) PrintPError("SIGTSTP");
+    //if (signal(SIGCHLD, sig) == SIG_ERR) PrintPError("SIGCHLD");
 
 	while (!forceExit) /* repeat forever */
 	{
@@ -98,5 +99,8 @@ int main (int argc, char *argv[])
 
 static void sig(int signo)
 {
+        if (signo == SIGCHLD) {
+           // CheckJobs();
+        }
 }
 

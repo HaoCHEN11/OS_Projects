@@ -121,12 +121,36 @@
 	void RunCmdBg(commandT* cmd)
 	{
 		// TODO
-        PrintBGJobs();
+        //PrintBGJobs();
 	}
 
 	void RunCmdPipe(commandT* cmd1, commandT* cmd2)
 	{
-	}
+        //Validate the cma1 and cmd2.
+        //
+        if (ResolveExternalCmd(cmd1) && ResolveExternalCmd(cmd2)) {
+            //fds for 2 process;
+            int A_B[2];
+            pipe(A_B);
+	    
+            pid_t pid = fork();
+            if (pid == 0 ) {//1st child proc: A
+                dup2(A_B[1], 1);
+                execv(cmd1->name, cmd1->argv);
+            } else { 
+                close(A_B[1]);
+            }
+        
+            pid = fork();
+            if (pid == 0 ) {//2nd child proc: B
+                dup2(A_B[0], 0);
+                execv(cmd2->name, cmd2->argv);
+            }   
+            wait(NULL);
+        } else {
+            printf("command error!");
+        }
+    }
 
 	void RunCmdRedirOut(commandT* cmd, char* file)
 	{
@@ -141,7 +165,7 @@
 static void RunExternalCmd(commandT* cmd, bool fork)
 {
   if (ResolveExternalCmd(cmd)){ 
-    if (cmd -> bg == 1) RunCmdBg(cmd);
+    //if (cmd -> bg == 1) RunCmdBg(cmd);
     Exec(cmd, fork);
   }
   else {
@@ -214,6 +238,8 @@ static bool ResolveExternalCmd(commandT* cmd)
                     bgjobL *bgjob = (bgjobL*) malloc (sizeof(bgjobL));
                     bgjob -> pid = pid;
                     bgjob -> next = NULL;
+                    
+                    int bgJobNumber = 1;
 
                     if (bgjobs == NULL) bgjobs = bgjob;
                     else {
@@ -221,12 +247,19 @@ static bool ResolveExternalCmd(commandT* cmd)
                         while (1) {
                             if (current -> next == NULL) {
                                 current -> next = bgjob;
+                                bgJobNumber++;
                                 break;
                             }
                             current = current -> next;
+                            bgJobNumber++;
                         } 
                     }
-                    
+                    printf("[%d] %d \n", bgJobNumber, pid); 
+                   // wait(NULL); 
+                    //int id = waitpid(pid, NULL, WNOHANG); 
+                    //printf("\n================== %d", id );
+                    // if (id == pid) printf("ri o!");
+                   // if(id == 0 ) printf("i m dead.");
                 } else { // Parent process wait for child terminate.
                     wait(NULL); 
                 }
@@ -256,6 +289,7 @@ static bool ResolveExternalCmd(commandT* cmd)
 
         void CheckJobs()
 	{
+           // PrintBGJobs();
  	}
 
 
