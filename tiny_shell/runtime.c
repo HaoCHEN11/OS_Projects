@@ -71,8 +71,8 @@
 
 	/* the pids of the background processes */
 	bgjobL *bgjobs = NULL;
-
-  /************Function Prototypes******************************************/
+    static fg_job = 0;
+    /************Function Prototypes******************************************/
 	/* run command */
 	static void RunCmdFork(commandT*, bool);
 	/* runs an external program command after some checks */
@@ -98,9 +98,9 @@
       if(n == 1)
           RunCmdFork(cmd[0], TRUE);
       else{
-        RunCmdPipe(cmd[0], cmd[1]);
+        RunCmdPipe(cmd, n);
         for(i = 0; i < n; i++)
-          ReleaseCmdT(&cmd[i]);
+            ReleaseCmdT(&cmd[i]);
       }
 	}
 
@@ -124,34 +124,46 @@
         //PrintBGJobs();
 	}
 
-	void RunCmdPipe(commandT* cmd1, commandT* cmd2)
-	{
-        //Validate the cma1 and cmd2.
-        //
-        if (ResolveExternalCmd(cmd1) && ResolveExternalCmd(cmd2)) {
-            //fds for 2 process;
-            int A_B[2];
-            pipe(A_B);
-	    
-            pid_t pid = fork();
-            if (pid == 0 ) {//1st child proc: A
-                dup2(A_B[1], 1);
-                execv(cmd1->name, cmd1->argv);
-            } else { 
-                close(A_B[1]);
-            }
-        
-            pid = fork();
-            if (pid == 0 ) {//2nd child proc: B
-                dup2(A_B[0], 0);
-                execv(cmd2->name, cmd2->argv);
-            }
-            wait(NULL);
-            wait(NULL); 
+	void RunCmdPipe(commandT** cmd, int n )
+{
+    //Validate the cma1 and cmd2.
+    int READ=0, WRITE=1;
+    int i = 0;
+    int A_B[2];
+    
+    for(i=0;i<n;i++){
+        if(!ResolveExternalCmd(cmd[i])){
+            fprintf(stderr,"%s command not found\n", cmd[i]->argv[0]);
+            return;   
+        }    
+    }
+
+    pipe(A_B);
+
+    pid_t pid = fork();
+    if ( pid == 0 ) {//1st child proc: A
+        dup2(A_B[WRITE], 1); //stdout
+        execv(cmd[0]->name, cmd[0]->argv);
+    } 
+    waitpid(-1,NULL,WNOHANG);
+    /*else {
+        wait(NULL);
+    } */
+
+    for(i=1;i<n;i++){
+        //fds for 2 process;
+        pid = fork();
+        assert(pid >=0);
+        if (pid == 0 ) {//2nd child proc: B
+            dup2(A_B[READ], 0); //stdin
+            if(i!=n-1)
+                dup2(A_B[WRITE], 1); // stdout
+            execv(cmd[i]->name, cmd[i]->argv);
         } else {
-            printf("command error!");
+            waitpid(-1,NULL,WNOHANG);
         }
     }
+}
 
 	void RunCmdRedirOut(commandT* cmd, char* file)
 	{
@@ -262,6 +274,7 @@ static bool ResolveExternalCmd(commandT* cmd)
                     // if (id == pid) printf("ri o!");
                    // if(id == 0 ) printf("i m dead.");
                 } else { // Parent process wait for child terminate.
+                    fg_job = pid;
                     wait(NULL); 
                 }
             }

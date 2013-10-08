@@ -99,8 +99,30 @@ int main (int argc, char *argv[])
 
 static void sig(int signo)
 {
-        if (signo == SIGCHLD) {
-           // CheckJobs();
+    if(signo == SIGINT)
+    { 
+        if(fg_job){
+            kill(-fg_job,SIGINT);
+            fg_job = 0;
         }
+        
+        return ;
+    }
+
+    if( signo ==SIGTSTP ) {
+        if(fg_job){
+            kill(-fg_job,SIGTSTP);
+            printf("[%i]   Stopped. \n", fg_job);
+            fflush(stdout);
+            fg_job = 0;
+        }
+        return;
+    }           
+    
+    if(signo == SIGCHLD){
+    
+    
+    } 
+                                            
 }
 

@@ -63,7 +63,7 @@
       int argc;
       char* argv[];
 	} commandT;
-
+    static int fg_job;
   /************Global Variables*********************************************/
 
 	/***********************************************************************
@@ -100,7 +100,7 @@
 	 *    Input: two command structure
 	 *    Output: void
 	 ***********************************************************************/
-	EXTERN void RunCmdPipe(commandT*, commandT*);
+	EXTERN void RunCmdPipe(commandT**, int);
 
 	/***********************************************************************
 	 *  Title: Runs two command with output redirection
