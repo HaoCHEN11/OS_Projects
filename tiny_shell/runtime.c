@@ -71,7 +71,7 @@
 
 	/* the pids of the background processes */
 	bgjobL *bgjobs = NULL;
-int fg_job = 0;
+    int fg_job = 0;
     /************Function Prototypes******************************************/
 	/* run command */
 	static void RunCmdFork(commandT*, bool);
@@ -248,31 +248,32 @@ static bool ResolveExternalCmd(commandT* cmd)
             }else { // parent process.
                 if (cmd -> bg == 1) { //A command with &, so parent will keep executing.
                     //Append the child process into list;
+
                     bgjobL *bgjob = (bgjobL*) malloc (sizeof(bgjobL));
                     bgjob -> pid = pid;
                     bgjob -> next = NULL;
-                    
+
                     int bgJobNumber = 1;
 
-                    if (bgjobs == NULL) bgjobs = bgjob;
-                    else {
-                        bgjobL *current = bgjobs;
-                        while (1) {
-                            if (current -> next == NULL) {
-                                current -> next = bgjob;
-                                bgJobNumber++;
-                                break;
-                            }
-                            current = current -> next;
-                            bgJobNumber++;
-                        } 
+                    if (bgjobs == NULL){ 
+                        bgjobs = (bgjobL *)malloc(sizeof(bgjobL));
                     }
+                    bgjobL *current = bgjobs;
+                    while (1) {
+                        if (current -> next == NULL) {
+                            current -> next = bgjob;
+                            bgJobNumber++;
+                            break;
+                        }
+                        current = current -> next;
+                        bgJobNumber++;
+                    } 
                     printf("[%d] %d \n", bgJobNumber, pid); 
-                   // wait(NULL); 
+                    // wait(NULL); 
                     //int id = waitpid(pid, NULL, WNOHANG); 
                     //printf("\n================== %d", id );
                     // if (id == pid) printf("ri o!");
-                   // if(id == 0 ) printf("i m dead.");
+                    // if(id == 0 ) printf("i m dead.");
                 } else { // Parent process wait for child terminate.
                     fg_job = pid;
                     waitpid(-1,NULL,WUNTRACED); 
@@ -335,18 +336,21 @@ void ReleaseCmdT(commandT **cmd){
 
 /*********************Utils****************************************/
 void PrintBGJobs() {
-    if (bgjobs == NULL) printf("No background job!");
-    else {
-        bgjobL *current = bgjobs;
-        int count = 0;
-        while (1) {
+    bgjobL* head = bgjobs;
+    if (head->next == NULL) {
+        printf("No background job!");
+        return;
+    }
+
+    bgjobL *current = head->next;
+    int count = 0;
+    while (1) {
         if (current -> next == NULL) {
-                printf ("Job id: %d \n", count);
-                break;
+            printf ("Job id: %d \n", count);
+            break;
         }
         printf ("Job id:  %d \n", count );
         current = current -> next;
         count++;
-        } 
-    }
+    } 
 }
