@@ -145,8 +145,9 @@
             if (pid == 0 ) {//2nd child proc: B
                 dup2(A_B[0], 0);
                 execv(cmd2->name, cmd2->argv);
-            }   
+            }
             wait(NULL);
+            wait(NULL); 
         } else {
             printf("command error!");
         }
