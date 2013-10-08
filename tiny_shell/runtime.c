@@ -71,7 +71,7 @@
 
 	/* the pids of the background processes */
 	bgjobL *bgjobs = NULL;
-    static fg_job = 0;
+int fg_job = 0;
     /************Function Prototypes******************************************/
 	/* run command */
 	static void RunCmdFork(commandT*, bool);
@@ -275,7 +275,7 @@ static bool ResolveExternalCmd(commandT* cmd)
                    // if(id == 0 ) printf("i m dead.");
                 } else { // Parent process wait for child terminate.
                     fg_job = pid;
-                    wait(NULL); 
+                    waitpid(-1,NULL,WUNTRACED); 
                 }
             }
 

@@ -55,7 +55,7 @@
   /************Function Prototypes******************************************/
 	/* handles SIGINT and SIGSTOP signals */	
 	static void sig(int);
-
+extern int fg_job;
   /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
@@ -105,7 +105,6 @@ static void sig(int signo)
             kill(-fg_job,SIGINT);
             fg_job = 0;
         }
-        
         return ;
     }
 
@@ -120,8 +119,16 @@ static void sig(int signo)
     }           
     
     if(signo == SIGCHLD){
-    
-    
+        pid_t pid;
+        while(pid = waitpid(-1, NULL,WNOHANG )>0){
+            if (pid == fg_job){ 
+                fg_job = 0;
+                return;
+            }
+            else {
+            }
+        } 
+
     } 
                                             
 }
