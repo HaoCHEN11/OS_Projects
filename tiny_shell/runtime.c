@@ -333,7 +333,7 @@ static bool ResolveExternalCmd(commandT* cmd)
 	static void RunBuiltInCmd(commandT* cmd)
 	{
             //NEED modified;
-            if (strcmp(cmd -> cmdline, "bg") == 0) {
+            if (strcmp(cmd -> argv[0], "bg") == 0) {
                 if(bgjobs == NULL || bgjobs->next==NULL)
                     return;
                 int pid = bgjobs->next->pid;
@@ -353,7 +353,7 @@ static bool ResolveExternalCmd(commandT* cmd)
                 else 
                     pid = atoi(cmd -> argv[1]);
                 
-                if (job_num = PopBGJob(pid) < 0) {
+                if ((job_num = PopBGJob(pid)) < 0) {
                     printf("No such job: %d", pid);
                     return;
                 }
@@ -405,7 +405,27 @@ static bool ResolveExternalCmd(commandT* cmd)
 
     void CheckJobs()
 	{
-           PrintBGJobs();
+           //PrintBGJobs();
+        int job_num = 1;
+        int pid = 0;
+        if (bgjobs == NULL || bgjobs -> next == NULL) 
+            return;
+        bgjobL *parent = bgjobs;
+        bgjobL *current = parent -> next;
+        
+        while (current != NULL) {
+            pid = waitpid(-1, NULL, WNOHANG);
+            if (pid != 0) {// find the job.
+                printf("[%d] Done    %d \n", job_num, pid);
+
+                parent -> next = current -> next; // Remove form list;
+                current = parent -> next;
+                return;
+            }
+            current = current -> next;
+            parent = parent -> next;
+            job_num++;
+        }       
  	}
 
 
