@@ -56,6 +56,7 @@
 	/* handles SIGINT and SIGSTOP signals */	
 	static void sig(int);
 extern int fg_job;
+extern bgjobL *bgjobs;
   /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
@@ -91,7 +92,15 @@ int main (int argc, char *argv[])
 		Interpret(cmdLine);
 
 	}
-
+    if(bgjobs != NULL){
+        bgjobL * p = bgjobs;
+        bgjobL * tmp;
+        while(p!=NULL){
+            tmp = p->next;
+            free(p);
+            p = tmp;    
+        }    
+    }
 	/* shell termination */
 	free(cmdLine);
 	return 0;
@@ -111,6 +120,10 @@ static void sig(int signo)
     if( signo ==SIGTSTP ) {
         if(fg_job){
             kill(-fg_job,SIGTSTP);
+            bgjobL *p = (bgjobL *)malloc(sizeof(bgjobL));
+            p->pid = fg_job;
+            p->state = STOPPED;
+            AddToBgJobs(p);
             printf("[%i]   Stopped. \n", fg_job);
             fflush(stdout);
             fg_job = 0;

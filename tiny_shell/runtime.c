@@ -170,28 +170,10 @@
                 dup2(A_B[1], 1); // stdout
                 execv(cmd[i]->name, cmd[i]->argv);
             } else {
-                
-                int defout=-1;
-                int fd= -1;
-                if(cmd[i]->is_redirect_out){
-                    defout = dup(1);
-                    fd=open(cmd[i]->redirect_out, O_RDWR|O_CREAT,
-                            S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-                    if(fd == -1){
-                        fprintf(stderr,"create file %s failed\n.",cmd[i]->redirect_out);
-                        return;    
-                    }
-                    dup2(fd, 1);
-                }
                 execv(cmd[i]->name, cmd[i]->argv);
-                if(cmd[i]->is_redirect_out){
-                    dup2(defout, 1); 
-                    close(fd);
-                    close(defout);
-                }
             }
         }
-            close(A_B[1]);
+        close(A_B[1]);
     }
 
     i = 0; // parent process wait for each child proc.
@@ -291,18 +273,40 @@ static bool ResolveExternalCmd(commandT* cmd)
                     }
                     dup2(fd, 1);
                 }
+                
+                
+                int defin = -1;
+                int fd_in = -1;
+                if(cmd->is_redirect_in){
+                    defin = dup(0);
+                    fd_in = open(cmd->redirect_in, O_RDONLY,S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+
+                    if(fd_in == -1){
+                        fprintf(stderr,"create file %s failed\n.",cmd->redirect_in);
+                        return;    
+                    }
+                    dup2(fd_in,0);
+                }
+
                 execv(cmd->name,cmd->argv);
                 if(cmd->is_redirect_out){
-                    dup2(defout, 1); 
+                    dup2(defout, 1); //restore  
                     close(fd);
                     close(defout);
                 }
+                if(cmd->is_redirect_in){
+                    dup2(defin,0); // restore
+                    close(fd_in);
+                    close(defin);
+                }
+
             }else { // parent process.
                 if (cmd -> bg == 1) { //A command with &, so parent will keep executing.
                     //Append the child process into list;
 
                     bgjobL *bgjob = (bgjobL*) malloc (sizeof(bgjobL));
                     bgjob -> pid = pid;
+                    bgjob -> state = RUNNING;
                     bgjob -> next = NULL;
 
                     int bgJobNumber = 0;
@@ -349,7 +353,20 @@ static bool ResolveExternalCmd(commandT* cmd)
             if (strcmp(cmd -> argv[0], "bg") == 0) {
                 if(bgjobs == NULL || bgjobs->next==NULL)
                     return;
-                int pid = bgjobs->next->pid;
+                int pid=-1;
+                if (cmd -> argc == 1) {// no arg, find most recent one.
+                    bgjobL *p = bgjobs->next;
+                    while(p->state != STOPPED&& p->next!= NULL){
+                        p=p->next;
+                    }
+                    if(p->state!=STOPPED){
+                        return;
+                    } else {
+                        pid = p->pid;    
+                    }
+                } else { 
+                    pid = atoi(cmd -> argv[1]);
+                }
                 kill(pid, SIGCONT);
                 return;
             }
@@ -433,6 +450,17 @@ static bool ResolveExternalCmd(commandT* cmd)
 
     int PushBGJob(pid_t pid) { // Push a into bgjob list and return its jobs number;
         return 0;
+    }
+
+    void AddToBgJobs(bgjobL *p){
+        if(bgjobs==NULL){
+            bgjobs = malloc(sizeof(bgjobL));
+            bgjobs->next = p;
+            return;
+        }
+        bgjobL *p_job = bgjobs->next; 
+        bgjobs->next = p;
+        p->next = p_job;
     }
 
     void CheckJobs()
