@@ -111,6 +111,10 @@ static void sig(int signo)
     if( signo ==SIGTSTP ) {
         if(fg_job){
             kill(-fg_job,SIGTSTP);
+            bgjobL *p = (bgjobL *)malloc(sizeof(bgjobL));
+            p->pid = fg_job;
+            p->state = STOPPED;
+            AddToBgJobs(p);
             printf("[%i]   Stopped. \n", fg_job);
             fflush(stdout);
             fg_job = 0;

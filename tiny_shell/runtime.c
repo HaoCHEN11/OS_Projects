@@ -64,10 +64,6 @@
 
 	#define NBUILTINCOMMANDS (sizeof BuiltInCommands / sizeof(char*))
 
-	typedef struct bgjob_l {
-		pid_t pid;
-		struct bgjob_l* next;
-	} bgjobL;
 
 	/* the pids of the background processes */
 	bgjobL *bgjobs = NULL;
@@ -158,28 +154,10 @@
                 dup2(A_B[1], 1); // stdout
                 execv(cmd[i]->name, cmd[i]->argv);
             } else {
-                
-                int defout=-1;
-                int fd= -1;
-                if(cmd[i]->is_redirect_out){
-                    defout = dup(1);
-                    fd=open(cmd[i]->redirect_out, O_RDWR|O_CREAT,
-                            S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-                    if(fd == -1){
-                        fprintf(stderr,"create file %s failed\n.",cmd[i]->redirect_out);
-                        return;    
-                    }
-                    dup2(fd, 1);
-                }
                 execv(cmd[i]->name, cmd[i]->argv);
-                if(cmd[i]->is_redirect_out){
-                    dup2(defout, 1); 
-                    close(fd);
-                    close(defout);
-                }
             }
         }
-            close(A_B[1]);
+        close(A_B[1]);
     }
 
     i = 0; // parent process wait for each child proc.
@@ -411,6 +389,17 @@ static bool ResolveExternalCmd(commandT* cmd)
 
     int PushBGJob(pid_t pid) { // Push a into bgjob list and return its jobs number;
         return 0;
+    }
+
+    void AddToBgJobs(bgjobL *p){
+        if(bgjobs==NULL){
+            bgjobs = malloc(sizeof(bgjobL));
+            bgjobs->next = p;
+            return;
+        }
+        bgjobL *p_job = bgjobs->next; 
+        bgjobs->next = p;
+        p->next = p_job;
     }
 
     void CheckJobs()
