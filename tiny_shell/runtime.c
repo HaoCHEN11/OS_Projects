@@ -326,6 +326,7 @@ static bool ResolveExternalCmd(commandT* cmd)
             if (strcmp(cmd, "fg") == 0) return TRUE;
             if (strcmp(cmd, "jobs") == 0) return TRUE;
             if (strcmp(cmd, "alias") == 0) return TRUE;
+            if (strcmp(cmd, "unalias") == 0) return TRUE;
         	return FALSE;     
         }
 
@@ -377,6 +378,15 @@ static bool ResolveExternalCmd(commandT* cmd)
                 }
                 return;
             }
+            
+            /***************************************
+             *
+             *For alias and unalias commands;
+             *
+             * ************************************/
+            if (strcmp(cmd -> argv[0], "alias") == 0) {}
+
+            if (strcmp(cmd -> argv[0], "unalias") == 0) {}          
 	}
 
     int PopBGJob(pid_t pid) { //Pop a job from bgjobs list and return its job number;
