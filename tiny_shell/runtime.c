@@ -68,9 +68,16 @@
 		pid_t pid;
 		struct bgjob_l* next;
 	} bgjobL;
+   
+    typedef struct alias_l {
+        char* key;
+        char* value;
+        struct alias_l* next;
+    } aliasL;  
 
 	/* the pids of the background processes */
 	bgjobL *bgjobs = NULL;
+    aliasL *aliasList = NULL;
     int fg_job = 0;
     /************Function Prototypes******************************************/
 	/* run command */
@@ -91,6 +98,11 @@
     /*pop and push a job from and into bgjob list*/
     static int PopBGJob();
     static int PushBGJob();
+    /*Alias and Unalias functions*/
+    static void PrintAlias();
+    static void AddAlias(commandT*);
+    static bool isAlias(commandT* cmd);
+    static commandT* ParseAliasCmd(commandT* cmd);
 /**************Implementation***********************************************/
     int total_task;
 	void RunCmd(commandT** cmd, int n)
@@ -384,7 +396,17 @@ static bool ResolveExternalCmd(commandT* cmd)
              *For alias and unalias commands;
              *
              * ************************************/
-            if (strcmp(cmd -> argv[0], "alias") == 0) {}
+            if (strcmp(cmd -> argv[0], "alias") == 0) {
+                printf("cmdline: %s \n", cmd->cmdline);
+                printf("argv1: %s \n", cmd->argv[0]);
+                printf("argv2: %s \n", cmd->argv[1]);
+                printf("argv3: %s \n", cmd->argv[2]);    
+
+                if (cmd -> argc == 1) //List all alias;
+                    PrintAlias();
+                else 
+                    AddAlias(cmd);
+            }
 
             if (strcmp(cmd -> argv[0], "unalias") == 0) {}          
 	}
@@ -485,4 +507,104 @@ void PrintBGJobs() {
         current = current -> next;
         count++;
     } 
+}
+
+void PrintAlias() {
+    return;
+}
+
+void AddAlias(commandT* cmd) {
+
+    //Generate original command text and alias command text.
+   char *originCmd = malloc(sizeof(char) * 100);
+   char *aliasCmd = malloc(sizeof(char) * 100);
+   int oCmd_size = 0;
+   int aCmd_size = 0;
+   int i =6; //hardcode to ignore "alias" from comline.
+   bool isLeftSide = TRUE;
+   for (i; i<=strlen(cmd->cmdline); i++) {
+        char current = cmd->cmdline[i];
+        
+        if (isLeftSide && current != '=') {
+            originCmd[oCmd_size] = current;
+            oCmd_size++;
+        } 
+        else if (isLeftSide && current =='=') {
+            originCmd[oCmd_size] = 0;
+            isLeftSide = FALSE;
+        }
+        else if (!isLeftSide && current != '\'') {
+            aliasCmd[aCmd_size] = current;
+            aCmd_size++;
+        }
+        else if (!isLeftSide && current == '\'') {
+            aliasCmd[aCmd_size] = 0;
+        }
+   }
+   printf("o: %s \n", originCmd);
+   printf("a: %s \n", aliasCmd);
+
+   //A new alias.
+   aliasL *alias = malloc(sizeof(aliasL));
+   alias -> key = originCmd;
+   alias -> value = aliasCmd;
+   alias -> next = NULL;
+   
+   //Insert the alias in the aliasL.
+   if (aliasList == NULL) {
+        aliasList = (aliasL *)malloc(sizeof(aliasL));
+   }
+
+}
+
+bool isAlias(commandT* cmd) {
+
+}
+
+commandT* ParseAliasCmd(commandT* cmd) {
+    
+    commandT* new_cmd = malloc(sizeof(commandT)+ sizeof(char *)* 100);
+    int i = 0;
+    int new_arg_count = 0;
+    bool inputQuoted = FALSE;
+    for(i=0; i<cmd->argc; i++)
+    {
+        char* cur_arg = cmd->argv[i];
+        if(strchr(cur_arg, ' '))
+        inputQuoted = TRUE;
+        char* new = is_alias_for(cur_arg);
+        char* tmp = malloc(sizeof(char) * MAXLINE);
+        int tmp_len = 0;
+        int j;
+        for(j=0; j<=strlen(new); j++)
+        {
+            char cur_char = new[j];
+            if(((cur_char == ' ' || cur_char == 0) && !inputQuoted) || (inputQuoted && cur_char == 0))
+            {
+                // a new argument is ended
+                tmp[tmp_len] = 0;
+                tmp_len = 0;
+                char* new_arg = malloc(sizeof(char) *(tmp_len + 1));
+                //  printf("new arg: %s\n", new_arg); garbage line?
+                strcpy(new_arg, tmp);
+                new_cmd->argv[new_arg_count] = new_arg;
+                // printf("new argv: %s\n", new_cmd->argv[new_arg_count]);
+                new_arg_count++;
+                tmp = realloc(tmp, sizeof(char) * MAXLINE);
+            }         
+        else
+            {
+                tmp[tmp_len] = cur_char;
+                tmp_len++;
+            }
+        }
+    inputQuoted = FALSE;
+        free(tmp);
+        //free(cur_arg); freeCommand will handle this after this func returns
+    }
+    new_cmd->name = new_cmd->argv[0];
+    new_cmd->argc = new_arg_count;
+    new_cmd->argv[new_cmd->argc] = 0;
+    freeCommand(cmd);
+    return new_cmd;    
 }
