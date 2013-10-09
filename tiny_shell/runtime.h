@@ -69,7 +69,8 @@
 	typedef struct bgjob_l {
 		pid_t pid;
         status state;
-		struct bgjob_l* next;
+		const char * cmd;
+        struct bgjob_l* next;
 	} bgjobL;
   /************Global Variables*********************************************/
 
