@@ -127,42 +127,43 @@
 	void RunCmdPipe(commandT** cmd, int n )
 {
     //Validate the cma1 and cmd2.
-    int READ=0, WRITE=1;
     int i = 0;
     int A_B[2];
-    
     for(i=0;i<n;i++){
         if(!ResolveExternalCmd(cmd[i])){
-            fprintf(stderr,"%s command not found\n", cmd[i]->argv[0]);
+            printf("%s command not found\n", cmd[i]->argv[0]);
             return;   
-        }    
+        } 
     }
-
+    
     pipe(A_B);
 
     pid_t pid = fork();
     if ( pid == 0 ) {//1st child proc: A
-        dup2(A_B[WRITE], 1); //stdout
+        dup2(A_B[1], 1); //stdout
         execv(cmd[0]->name, cmd[0]->argv);
     } 
-    waitpid(-1,NULL,WNOHANG);
-    /*else {
-        wait(NULL);
-    } */
-
+    
+    close(A_B[1]);
+    
     for(i=1;i<n;i++){
         //fds for 2 process;
         pid = fork();
         assert(pid >=0);
         if (pid == 0 ) {//2nd child proc: B
-            dup2(A_B[READ], 0); //stdin
+            dup2(A_B[0], 0); //stdin
             if(i!=n-1)
-                dup2(A_B[WRITE], 1); // stdout
+                dup2(A_B[1], 1); // stdout
             execv(cmd[i]->name, cmd[i]->argv);
-        } else {
-            waitpid(-1,NULL,WNOHANG);
         }
+            close(A_B[1]);
     }
+
+    i = 0; // parent process wait for each child proc.
+    for(; i < n; i++) {
+        wait(NULL);
+    }
+
 }
 
 	void RunCmdRedirOut(commandT* cmd, char* file)
