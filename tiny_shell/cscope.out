@@ -1,4 +1,4 @@
-cscope 15 $HOME/OS_Projects/tiny_shell               0000156797
+cscope 15 $HOME/OS_Projects/tiny_shell               0000157088
 	@config.h
 
 26 #i‚de‡
@@ -2001,13 +2001,33 @@ cmd
 ¨gv
 );
 
-249 i‡(
+248 if(
+cmd
+->
+is_ªdúe˘ed_out
+){
+
+249 
+fd
+=
+	`›í
+(
+cmd
+->
+ªdúe˘ed_out
+, 
+O_RDWR
+|
+O_CREAT
+);
+
+252 i‡(
 cmd
  -> 
 bg
  == 1) {
 
-252 
+255 
 bgjobL
  *
 bgjob
@@ -2015,13 +2035,13 @@ bgjob
 	`mÆloc
  ((bgjobL));
 
-253 
+256 
 bgjob
  -> 
 pid
  =Öid;
 
-254 
+257 
 bgjob
  -> 
 √xt
@@ -2029,17 +2049,17 @@ bgjob
 NULL
 ;
 
-256 
+259 
 bgJobNumbî
  = 0;
 
-258 i‡(
+261 i‡(
 bgjobs
  =
 NULL
 ){
 
-259 
+262 
 bgjobs
  = (
 bgjobL
@@ -2047,7 +2067,7 @@ bgjobL
 	`mÆloc
 ((bgjobL));
 
-261 
+264 
 bgjobL
  *
 cuºít
@@ -2055,7 +2075,7 @@ cuºít
 bgjobs
 ;
 
-263 i‡(
+266 i‡(
 cuºít
  -> 
 √xt
@@ -2063,7 +2083,7 @@ cuºít
 NULL
 ) {
 
-264 
+267 
 cuºít
  -> 
 √xt
@@ -2071,21 +2091,21 @@ cuºít
 bgjob
 ;
 
-265 
+268 
 bgJobNumbî
 ++;
 
-268 
+271 
 cuºít
  = cuºíà-> 
 √xt
 ;
 
-269 
+272 
 bgJobNumbî
 ++;
 
-271 
+274 
 	`¥ötf
 ("[%d] %d \n", 
 bgJobNumbî
@@ -2093,13 +2113,13 @@ bgJobNumbî
 pid
 );
 
-274 
+277 
 fg_job
  = 
 pid
 ;
 
-275 
+278 
 	`waôpid
 (-1,
 NULL
@@ -2107,11 +2127,11 @@ NULL
 WUNTRACED
 );
 
-280 
+283 
 	}
 }
 
-282 
+285 
 boﬁ
  
 	$IsBuûtIn
@@ -2119,7 +2139,7 @@ boﬁ
 cmd
 )
 
-285 i‡(
+288 i‡(
 	`°rcmp
 (
 cmd
@@ -2127,7 +2147,7 @@ cmd
 TRUE
 ;
 
-286 i‡(
+289 i‡(
 	`°rcmp
 (
 cmd
@@ -2135,7 +2155,7 @@ cmd
 TRUE
 ;
 
-287 i‡(
+290 i‡(
 	`°rcmp
 (
 cmd
@@ -2143,7 +2163,7 @@ cmd
 TRUE
 ;
 
-288 i‡(
+291 i‡(
 	`°rcmp
 (
 cmd
@@ -2151,15 +2171,15 @@ cmd
 TRUE
 ;
 
-289  
+292  
 FALSE
 ;
 
-290 
+293 
 	}
 }
 
-293 
+296 
 	$RunBuûtInCmd
 (
 comm™dT
@@ -2167,7 +2187,7 @@ comm™dT
 cmd
 )
 
-296 i‡(
+299 i‡(
 	`°rcmp
 (
 cmd
@@ -2175,7 +2195,7 @@ cmd
 cmdlöe
 , "bg") == 0) {
 
-297 if(
+300 if(
 bgjobs
  =
 NULL
@@ -2183,7 +2203,7 @@ NULL
 √xt
 ==NULL)
 
-299 
+302 
 pid
  = 
 bgjobs
@@ -2191,7 +2211,7 @@ bgjobs
 √xt
 ->pid;
 
-300 
+303 
 	`kûl
 (
 pid
@@ -2199,15 +2219,15 @@ pid
 SIGCONT
 );
 
-303 i‡(
+307 i‡(
 	`°rcmp
 (
 cmd
  -> 
 cmdlöe
-, "jobs") == 0) {
+, "fg") == 0) {
 
-304 if(
+308 if(
 bgjobs
  =
 NULL
@@ -2215,7 +2235,45 @@ NULL
 √xt
 ==NULL)
 
-307 
+310 
+pid
+ = 
+bgjobs
+->
+√xt
+->pid;
+
+311 
+fg_job
+ = 
+pid
+;
+
+312 
+	`waôpid
+(
+pid
+, 
+NULL
+, 0 );
+
+315 i‡(
+	`°rcmp
+(
+cmd
+ -> 
+cmdlöe
+, "jobs") == 0) {
+
+316 if(
+bgjobs
+ =
+NULL
+ || bgjobs->
+√xt
+==NULL)
+
+319 
 bgjobL
  * 
 p
@@ -2225,7 +2283,7 @@ bgjobs
 √xt
 ;
 
-309 
+321 
 	`¥ötf
 ("pid:%d\n",
 p
@@ -2233,7 +2291,7 @@ p
 pid
 );
 
-310 if(
+322 if(
 p
 ->
 √xt
@@ -2241,29 +2299,29 @@ p
 NULL
 )
 
-312 
+324 
 p
 ı->
 √xt
 ;
 
-317 
+329 
 	}
 }
 
-319 
+331 
 	$CheckJobs
 ()
 
-321 
+333 
 	`PrötBGJobs
 ();
 
-322 
+334 
 	}
 }
 
-325 
+337 
 comm™dT
 * 
 	$Cª©eCmdT
@@ -2271,11 +2329,11 @@ comm™dT
 n
 )
 
-327 
+339 
 i
 ;
 
-328 
+340 
 comm™dT
  * 
 cd
@@ -2285,7 +2343,7 @@ cd
 n
  + 1));
 
-329 
+341 
 cd
  -> 
 «me
@@ -2293,7 +2351,7 @@ cd
 NULL
 ;
 
-330 
+342 
 cd
  -> 
 cmdlöe
@@ -2301,7 +2359,7 @@ cmdlöe
 NULL
 ;
 
-331 
+343 
 cd
  -> 
 is_ªdúe˘_ö
@@ -2309,7 +2367,7 @@ is_ªdúe˘_ö
 is_ªdúe˘_out
  = 0;
 
-332 
+344 
 cd
  -> 
 ªdúe˘_ö
@@ -2319,7 +2377,7 @@ cd
 NULL
 ;
 
-333 
+345 
 cd
  -> 
 ¨gc
@@ -2327,13 +2385,13 @@ cd
 n
 ;
 
-334 
+346 
 i
  = 0; i <=
 n
 ; i++)
 
-335 
+347 
 cd
  -> 
 ¨gv
@@ -2343,15 +2401,15 @@ i
 NULL
 ;
 
-336  
+348  
 cd
 ;
 
-337 
+349 
 	}
 }
 
-340 
+352 
 	$Rñó£CmdT
 (
 comm™dT
@@ -2359,11 +2417,11 @@ comm™dT
 cmd
 ){
 
-341 
+353 
 i
 ;
 
-342 if((*
+354 if((*
 cmd
 )->
 «me
@@ -2373,7 +2431,7 @@ NULL
 	`‰ì
 ((*cmd)->name);
 
-343 if((*
+355 if((*
 cmd
 )->
 cmdlöe
@@ -2383,7 +2441,7 @@ NULL
 	`‰ì
 ((*cmd)->cmdline);
 
-344 if((*
+356 if((*
 cmd
 )->
 ªdúe˘_ö
@@ -2393,7 +2451,7 @@ NULL
 	`‰ì
 ((*cmd)->redirect_in);
 
-345 if((*
+357 if((*
 cmd
 )->
 ªdúe˘_out
@@ -2403,7 +2461,7 @@ NULL
 	`‰ì
 ((*cmd)->redirect_out);
 
-346 
+358 
 i
  = 0; i < (*
 cmd
@@ -2411,7 +2469,7 @@ cmd
 ¨gc
 ; i++)
 
-347 if((*
+359 if((*
 cmd
 )->
 ¨gv
@@ -2423,27 +2481,27 @@ NULL
 	`‰ì
 ((*cmd)->argv[i]);
 
-348 
+360 
 	`‰ì
 (*
 cmd
 );
 
-349 
+361 
 	}
 }
 
-352 
+364 
 	$PrötBGJobs
 () {
 
-353 i‡(
+365 i‡(
 bgjobs
  =
 NULL
 ) ;
 
-354 
+366 
 bgjobL
 * 
 hód
@@ -2451,7 +2509,7 @@ hód
 bgjobs
 ;
 
-355 i‡(
+367 i‡(
 hód
 ->
 √xt
@@ -2459,11 +2517,11 @@ hód
 NULL
 ) {
 
-356 
+368 
 	`¥ötf
 ("No background job!");
 
-360 
+372 
 bgjobL
  *
 cuºít
@@ -2473,11 +2531,11 @@ hód
 √xt
 ;
 
-361 
+373 
 cou¡
  = 0;
 
-363 i‡(
+375 i‡(
 cuºít
  -> 
 √xt
@@ -2485,29 +2543,29 @@ cuºít
 NULL
 ) {
 
-364 
+376 
 	`¥ötf
  ("Job id: %d \n", 
 cou¡
 );
 
-367 
+379 
 	`¥ötf
  ("Job id: %d \n", 
 cou¡
  );
 
-368 
+380 
 cuºít
  = cuºíà-> 
 √xt
 ;
 
-369 
+381 
 cou¡
 ++;
 
-371 
+383 
 	}
 }
 

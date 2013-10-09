@@ -152,9 +152,30 @@
         assert(pid >=0);
         if (pid == 0 ) {//2nd child proc: B
             dup2(A_B[0], 0); //stdin
-            if(i!=n-1)
+            if(i!=n-1){
                 dup2(A_B[1], 1); // stdout
-            execv(cmd[i]->name, cmd[i]->argv);
+                execv(cmd[i]->name, cmd[i]->argv);
+            } else {
+                
+                int defout=-1;
+                int fd= -1;
+                if(cmd[i]->is_redirect_out){
+                    defout = dup(1);
+                    fd=open(cmd[i]->redirect_out, O_RDWR|O_CREAT,
+                            S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+                    if(fd == -1){
+                        fprintf(stderr,"create file %s failed\n.",cmd[i]->redirect_out);
+                        return;    
+                    }
+                    dup2(fd, 1);
+                }
+                execv(cmd[i]->name, cmd[i]->argv);
+                if(cmd[i]->is_redirect_out){
+                    dup2(defout, 1); 
+                    close(fd);
+                    close(defout);
+                }
+            }
         }
             close(A_B[1]);
     }
@@ -244,7 +265,24 @@ static bool ResolveExternalCmd(commandT* cmd)
                 return;
             }
             if(pid ==0){ // child process.
+                int defout=-1;
+                int fd= -1;
+                if(cmd->is_redirect_out){
+                    defout = dup(1);
+                    fd=open(cmd->redirect_out, O_RDWR|O_CREAT,
+                            S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+                    if(fd == -1){
+                        fprintf(stderr,"create file %s failed\n.",cmd->redirect_out);
+                        return;    
+                    }
+                    dup2(fd, 1);
+                }
                 execv(cmd->name,cmd->argv);
+                if(cmd->is_redirect_out){
+                    dup2(defout, 1); 
+                    close(fd);
+                    close(defout);
+                }
             }else { // parent process.
                 if (cmd -> bg == 1) { //A command with &, so parent will keep executing.
                     //Append the child process into list;
@@ -272,7 +310,7 @@ static bool ResolveExternalCmd(commandT* cmd)
                 
                 } else { // Parent process wait for child terminate.
                     fg_job = pid;
-                     waitpid(-1,NULL,WUNTRACED);
+                    waitpid(-1,NULL,WUNTRACED);
                 }
             }
 
