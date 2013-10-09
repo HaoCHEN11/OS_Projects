@@ -257,12 +257,33 @@ static bool ResolveExternalCmd(commandT* cmd)
                     }
                     dup2(fd, 1);
                 }
+                
+                
+                int defin = -1;
+                int fd_in = -1;
+                if(cmd->is_redirect_in){
+                    defin = dup(0);
+                    fd_in = open(cmd->redirect_in, O_RDONLY,S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+
+                    if(fd_in == -1){
+                        fprintf(stderr,"create file %s failed\n.",cmd->redirect_in);
+                        return;    
+                    }
+                    dup2(fd_in,0);
+                }
+
                 execv(cmd->name,cmd->argv);
                 if(cmd->is_redirect_out){
-                    dup2(defout, 1); 
+                    dup2(defout, 1); //restore  
                     close(fd);
                     close(defout);
                 }
+                if(cmd->is_redirect_in){
+                    dup2(defin,0); // restore
+                    close(fd_in);
+                    close(defin);
+                }
+
             }else { // parent process.
                 if (cmd -> bg == 1) { //A command with &, so parent will keep executing.
                     //Append the child process into list;
