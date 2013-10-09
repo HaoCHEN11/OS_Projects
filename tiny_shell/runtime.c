@@ -64,11 +64,6 @@
 
 	#define NBUILTINCOMMANDS (sizeof BuiltInCommands / sizeof(char*))
 
-	typedef struct bgjob_l {
-		pid_t pid;
-		struct bgjob_l* next;
-	} bgjobL;
-   
     typedef struct alias_l {
         char* key;
         char* value;
@@ -76,7 +71,7 @@
     } aliasL;  
 
 	/* the pids of the background processes */
-	bgjobL *bgjobs = NULL;
+    bgjobL *bgjobs =NULL;
     aliasL *aliasList = NULL;
     int fg_job = 0;
     /************Function Prototypes******************************************/

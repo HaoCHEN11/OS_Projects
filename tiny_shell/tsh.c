@@ -55,8 +55,8 @@
   /************Function Prototypes******************************************/
 	/* handles SIGINT and SIGSTOP signals */	
 	static void sig(int);
-extern int fg_job;
-extern bgjobL *bgjobs;
+    extern int fg_job;
+    extern bgjobL *bgjobs;
   /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
