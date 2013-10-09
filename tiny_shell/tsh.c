@@ -65,42 +65,43 @@ int main (int argc, char *argv[])
 {
 	/* Initialize command buffer */
 	char* cmdLine = malloc(sizeof(char*)*BUFSIZE);
-	
+
 	/* shell initialization */
 	if (signal(SIGINT, sig) == SIG_ERR) PrintPError("SIGINT");
 	if (signal(SIGTSTP, sig) == SIG_ERR) PrintPError("SIGTSTP");
-    //if (signal(SIGCHLD, sig) == SIG_ERR) PrintPError("SIGCHLD");
+	//if (signal(SIGCHLD, sig) == SIG_ERR) PrintPError("SIGCHLD");
 
 	while (!forceExit) /* repeat forever */
 	{
 		/* read command line */
-		printf("Hao@tsh>");
-        fflush(stdout);
-        getCommandLine(&cmdLine, BUFSIZE);
+		getCommandLine(&cmdLine, BUFSIZE);
 
-        if(strcmp(cmdLine, "exit") == 0)
-        {
-          forceExit=TRUE;
-          continue;
-        }
+		if(strcmp(cmdLine, "exit") == 0)
+		{
+			break;
+			//forceExit=TRUE;
+			//continue;
+		}
 
 		/* checks the status of background jobs */
-		CheckJobs();
-		
+		//CheckJobs();
+
 		/* interpret command and line
 		 * includes executing of commands */
 		Interpret(cmdLine);
 
 	}
-    if(bgjobs != NULL){
-        bgjobL * p = bgjobs;
-        bgjobL * tmp;
-        while(p!=NULL){
-            tmp = p->next;
-            free(p);
-            p = tmp;    
-        }    
-    }
+	if(bgjobs != NULL){
+		bgjobL * p = bgjobs;
+		bgjobL * tmp;
+		while(p!=NULL){
+			tmp = p->next;
+			if(p->state == RUNNING)
+				kill(-p->pid,SIGINT);
+			free(p);
+			p = tmp;    
+		}    
+	}
 	/* shell termination */
 	free(cmdLine);
 	return 0;

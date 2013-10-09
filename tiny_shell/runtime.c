@@ -294,7 +294,7 @@ static bool ResolveExternalCmd(commandT* cmd)
                     close(fd_in);
                     close(defin);
                 }
-
+		exit(0);
             }else { // parent process.
                 if (cmd -> bg == 1) { //A command with &, so parent will keep executing.
                     //Append the child process into list;
@@ -305,19 +305,15 @@ static bool ResolveExternalCmd(commandT* cmd)
                     bgjob -> next = NULL;
 
                     int bgJobNumber = 0;
+		    AddToBgJobs(bgjob);
 
-                    if (bgjobs == NULL){ 
-                        bgjobs = (bgjobL *)malloc(sizeof(bgjobL));
-                    }
-                    bgjobL *current = bgjobs;
+                    bgjobL *current = bgjobs->next;
                     while (1) {
+                        bgJobNumber++;
                         if (current -> next == NULL) {
-                            current -> next = bgjob;
-                            bgJobNumber++;
                             break;
                         }
                         current = current -> next;
-                        bgJobNumber++;
                     } 
                     printf("[%d] %d \n", bgJobNumber, pid); 
                 
