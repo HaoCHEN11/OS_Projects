@@ -85,10 +85,12 @@
 	static void RunBuiltInCmd(commandT*);
 	/* checks whether a command is a builtin command */
 	static bool IsBuiltIn(char*);
+  /************External Declaration*****************************************/
     /*Util function to debug;*/
     static void PrintBGJobs();
-  /************External Declaration*****************************************/
-
+    /*pop and push a job from and into bgjob list*/
+    static int PopBGJob();
+    static int PushBGJob();
 /**************Implementation***********************************************/
     int total_task;
 	void RunCmd(commandT** cmd, int n)
@@ -339,14 +341,28 @@ static bool ResolveExternalCmd(commandT* cmd)
                 return;
             }
 
-            if (strcmp(cmd -> cmdline, "fg") == 0) {
-                if(bgjobs == NULL || bgjobs->next==NULL)
+            if (strcmp(cmd -> argv[0], "fg") == 0) {
+                int job_num = 0;
+                int pid = 0;
+
+                if(bgjobs == NULL || bgjobs->next==NULL) // No background job.
                     return;
-                int pid = bgjobs->next->pid;
+                
+                if (cmd -> argc == 1) // no arg, find most recent one.
+                    pid = bgjobs->next->pid;
+                else 
+                    pid = atoi(cmd -> argv[1]);
+                
+                if (job_num = PopBGJob(pid) < 0) {
+                    printf("No such job: %d", pid);
+                    return;
+                }
+
                 fg_job = pid;
                 waitpid(pid, NULL, 0 );
                 return;
             }
+
             if (strcmp(cmd -> cmdline, "jobs") == 0) {
                 if(bgjobs == NULL || bgjobs->next==NULL)
                     return;
@@ -362,6 +378,30 @@ static bool ResolveExternalCmd(commandT* cmd)
                 return;
             }
 	}
+
+    int PopBGJob(pid_t pid) { //Pop a job from bgjobs list and return its job number;
+        int job_num = 1;
+        if (bgjobs == NULL || bgjobs -> next == NULL) 
+            return -1;
+        bgjobL *parent = bgjobs;
+        bgjobL *current = parent -> next;
+        
+        while (current != NULL) {
+            if (pid == current -> pid) {// find the job.
+                parent -> next = current -> next;
+                current = parent -> next;
+                return job_num;
+            }
+            current = current -> next;
+            parent = parent -> next;
+            job_num++;
+        }       
+        return -1; // Failed to find a job by pid;
+    }
+
+    int PushBGJob(pid_t pid) { // Push a into bgjob list and return its jobs number;
+        return 0;
+    }
 
     void CheckJobs()
 	{
