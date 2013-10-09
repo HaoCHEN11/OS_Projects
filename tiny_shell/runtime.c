@@ -269,6 +269,7 @@ static bool ResolveExternalCmd(commandT* cmd)
 
                     bgjobL *bgjob = (bgjobL*) malloc (sizeof(bgjobL));
                     bgjob -> pid = pid;
+                    bgjob -> state = RUNNING;
                     bgjob -> next = NULL;
 
                     int bgJobNumber = 0;
@@ -315,7 +316,20 @@ static bool ResolveExternalCmd(commandT* cmd)
             if (strcmp(cmd -> argv[0], "bg") == 0) {
                 if(bgjobs == NULL || bgjobs->next==NULL)
                     return;
-                int pid = bgjobs->next->pid;
+                int pid=-1;
+                if (cmd -> argc == 1) {// no arg, find most recent one.
+                    bgjobL *p = bgjobs->next;
+                    while(p->state != STOPPED&& p->next!= NULL){
+                        p=p->next;
+                    }
+                    if(p->state!=STOPPED){
+                        return;
+                    } else {
+                        pid = p->pid;    
+                    }
+                } else { 
+                    pid = atoi(cmd -> argv[1]);
+                }
                 kill(pid, SIGCONT);
                 return;
             }
