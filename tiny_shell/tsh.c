@@ -120,7 +120,7 @@ static void sig(int signo)
     
     if(signo == SIGCHLD){
         pid_t pid;
-        while(pid = waitpid(-1, NULL, WNOHANG )>0){
+        while(pid = waitpid(-1, NULL, WNOHANG ), pid>0){
             if (pid == fg_job){ 
                 fg_job = 0;
                 return;

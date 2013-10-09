@@ -294,11 +294,38 @@ static bool ResolveExternalCmd(commandT* cmd)
 	{
             //NEED modified;
             if (strcmp(cmd -> cmdline, "bg") == 0) {
-                printf("bg need implement.");    
+                if(bgjobs == NULL || bgjobs->next==NULL)
+                    return;
+                int pid = bgjobs->next->pid;
+                kill(pid, SIGCONT);
+                return;
+            }
+
+            if (strcmp(cmd -> cmdline, "fg") == 0) {
+                if(bgjobs == NULL || bgjobs->next==NULL)
+                    return;
+                int pid = bgjobs->next->pid;
+                fg_job = pid;
+                waitpid(pid, NULL, 0 );
+                return;
+            }
+            if (strcmp(cmd -> cmdline, "jobs") == 0) {
+                if(bgjobs == NULL || bgjobs->next==NULL)
+                    return;
+                else {
+                    bgjobL * p= bgjobs->next;
+                    while(1){
+                        printf("pid:%d\n",p->pid);
+                        if(p->next==NULL)
+                            break;
+                        p=p->next;
+                    }            
+                }
+                return;
             }
 	}
 
-        void CheckJobs()
+    void CheckJobs()
 	{
            PrintBGJobs();
  	}

@@ -1,4 +1,4 @@
-cscope 15 $HOME/Documents/OS_Projects/tiny_shell               0000153742
+cscope 15 $HOME/OS_Projects/tiny_shell               0000156797
 	@config.h
 
 26 #i‚de‡
@@ -1303,6 +1303,10 @@ bgjobL
 NULL
 ;
 
+74 
+	gfg_job
+ = 0;
+
 77 
 RunCmdF‹k
 (
@@ -1347,11 +1351,15 @@ boﬁ
 IsBuûtIn
 (*);
 
-91 
+89 
+PrötBGJobs
+();
+
+93 
 	gtŸÆ_èsk
 ;
 
-92 
+94 
 	$RunCmd
 (
 comm™dT
@@ -1361,21 +1369,21 @@ cmd
 n
 )
 
-94 
+96 
 i
 ;
 
-95 
+97 
 tŸÆ_èsk
  = 
 n
 ;
 
-96 if(
+98 if(
 n
  == 1)
 
-97 
+99 
 	`RunCmdF‹k
 (
 cmd
@@ -1383,19 +1391,21 @@ cmd
 TRUE
 );
 
-99 
+101 
 	`RunCmdPùe
 (
 cmd
-[0], cmd[1]);
+, 
+n
+);
 
-100 
+102 
 i
  = 0; i < 
 n
 ; i++)
 
-101 
+103 
 	`Rñó£CmdT
 (&
 cmd
@@ -1403,11 +1413,11 @@ cmd
 i
 ]);
 
-103 
+105 
 	}
 }
 
-105 
+107 
 	$RunCmdF‹k
 (
 comm™dT
@@ -1419,13 +1429,13 @@ boﬁ
 f‹k
 )
 
-107 i‡(
+109 i‡(
 cmd
 ->
 ¨gc
 <=0)
 
-109 i‡(
+111 i‡(
 	`IsBuûtIn
 (
 cmd
@@ -1433,13 +1443,13 @@ cmd
 ¨gv
 [0]))
 
-111 
+113 
 	`RunBuûtInCmd
 (
 cmd
 );
 
-115 
+117 
 	`RunExã∫ÆCmd
 (
 cmd
@@ -1447,11 +1457,11 @@ cmd
 f‹k
 );
 
-117 
+119 
 	}
 }
 
-119 
+121 
 	$RunCmdBg
 (
 comm™dT
@@ -1459,25 +1469,171 @@ comm™dT
 cmd
 )
 
-122 
+125 
 	}
 }
 
-124 
+127 
 	$RunCmdPùe
 (
 comm™dT
-* 
-cmd1
-, comm™dT* 
-cmd2
-)
+** 
+cmd
+, 
+n
+ )
 
-126 
+130 
+i
+ = 0;
+
+131 
+A_B
+[2];
+
+132 
+i
+=0;i<
+n
+;i++){
+
+133 if(!
+	`ResﬁveExã∫ÆCmd
+(
+cmd
+[
+i
+])){
+
+134 
+	`¥ötf
+("%†comm™dÇŸ found\n", 
+cmd
+[
+i
+]->
+¨gv
+[0]);
+
+139 
+	`pùe
+(
+A_B
+);
+
+141 
+pid_t
+ 
+pid
+ = 
+	`f‹k
+();
+
+142 i‡–
+pid
+ == 0 ) {
+
+143 
+	`dup2
+(
+A_B
+[1], 1);
+
+144 
+	`execv
+(
+cmd
+[0]->
+«me
+, cmd[0]->
+¨gv
+);
+
+147 
+	`˛o£
+(
+A_B
+[1]);
+
+149 
+i
+=1;i<
+n
+;i++){
+
+151 
+pid
+ = 
+	`f‹k
+();
+
+152 
+	`as£π
+(
+pid
+ >=0);
+
+153 i‡(
+pid
+ == 0 ) {
+
+154 
+	`dup2
+(
+A_B
+[0], 0);
+
+155 if(
+i
+!=
+n
+-1)
+
+156 
+	`dup2
+(
+A_B
+[1], 1);
+
+157 
+	`execv
+(
+cmd
+[
+i
+]->
+«me
+, cmd[i]->
+¨gv
+);
+
+159 
+	`˛o£
+(
+A_B
+[1]);
+
+162 
+i
+ = 0;
+
+163 ; 
+i
+ < 
+n
+; i++) {
+
+164 
+	`waô
+(
+NULL
+);
+
+167 
 	}
 }
 
-128 
+169 
 	$RunCmdRedúOut
 (
 comm™dT
@@ -1487,11 +1643,11 @@ cmd
 fûe
 )
 
-130 
+171 
 	}
 }
 
-132 
+173 
 	$RunCmdRedúIn
 (
 comm™dT
@@ -1501,11 +1657,11 @@ cmd
 fûe
 )
 
-134 
+175 
 	}
 }
 
-138 
+179 
 	$RunExã∫ÆCmd
 (
 comm™dT
@@ -1517,13 +1673,13 @@ boﬁ
 f‹k
 )
 
-140 i‡(
+181 i‡(
 	`ResﬁveExã∫ÆCmd
 (
 cmd
 )){
 
-141 
+183 
 	`Exec
 (
 cmd
@@ -1531,7 +1687,7 @@ cmd
 f‹k
 );
 
-144 
+186 
 	`¥ötf
 ("%s: comm™dÇŸ found\n", 
 cmd
@@ -1539,23 +1695,23 @@ cmd
 ¨gv
 [0]);
 
-145 
+187 
 	`fÊush
 (
 °dout
 );
 
-146 
+188 
 	`Rñó£CmdT
 (&
 cmd
 );
 
-148 
+190 
 	}
 }
 
-151 
+193 
 boﬁ
  
 	$ResﬁveExã∫ÆCmd
@@ -1565,29 +1721,29 @@ comm™dT
 cmd
 )
 
-153 *
+195 *
 ∑thli°
 , *
 c
 ;
 
-154 
+196 
 buf
 [1024];
 
-155 
+197 
 i
 , 
 j
 ;
 
-156 
+198 
 °©
  
 fs
 ;
 
-158 if(
+200 if(
 	`°rchr
 (
 cmd
@@ -1597,7 +1753,7 @@ cmd
 NULL
 ){
 
-159 if(
+201 if(
 	`°©
 (
 cmd
@@ -1607,7 +1763,7 @@ cmd
 fs
 ) >= 0){
 
-160 if(
+202 if(
 	`S_ISDIR
 (
 fs
@@ -1615,7 +1771,7 @@ fs
 °_mode
 ) == 0)
 
-161 if(
+203 if(
 	`ac˚ss
 (
 cmd
@@ -1625,7 +1781,7 @@ cmd
 X_OK
 ) == 0){
 
-162 
+204 
 cmd
 ->
 «me
@@ -1635,21 +1791,21 @@ cmd
 ¨gv
 [0]);
 
-163  
+205  
 TRUE
 ;
 
-166  
+208  
 FALSE
 ;
 
-168 
+210 
 ∑thli°
  = 
 	`gëív
 ("PATH");
 
-169 if(
+211 if(
 ∑thli°
  =
 NULL
@@ -1657,11 +1813,11 @@ NULL
 FALSE
 ;
 
-170 
+212 
 i
  = 0;
 
-171 
+213 
 i
 <
 	`°æí
@@ -1669,7 +1825,7 @@ i
 ∑thli°
 )){
 
-172 
+214 
 c
  = 
 	`°rchr
@@ -1679,13 +1835,13 @@ c
 i
 ]),':');
 
-173 if(
+215 if(
 c
  !
 NULL
 ){
 
-174 
+216 
 j
  = 0; 
 c
@@ -1695,7 +1851,7 @@ c
 i
 ]); i++, j++)
 
-175 
+217 
 buf
 [
 j
@@ -1705,11 +1861,11 @@ j
 i
 ];
 
-176 
+218 
 i
 ++;
 
-179 
+221 
 j
  = 0; 
 i
@@ -1719,7 +1875,7 @@ i
 ∑thli°
 ); i++, j++)
 
-180 
+222 
 buf
 [
 j
@@ -1729,19 +1885,19 @@ j
 i
 ];
 
-182 
+224 
 buf
 [
 j
 ] = '\0';
 
-183 
+225 
 	`°rˇt
 (
 buf
 , "/");
 
-184 
+226 
 	`°rˇt
 (
 buf
@@ -1751,7 +1907,7 @@ cmd
 ¨gv
 [0]);
 
-185 if(
+227 if(
 	`°©
 (
 buf
@@ -1759,7 +1915,7 @@ buf
 fs
 ) >= 0){
 
-186 if(
+228 if(
 	`S_ISDIR
 (
 fs
@@ -1767,7 +1923,7 @@ fs
 °_mode
 ) == 0)
 
-187 if(
+229 if(
 	`ac˚ss
 (
 buf
@@ -1775,7 +1931,7 @@ buf
 X_OK
 ) == 0){
 
-188 
+230 
 cmd
 ->
 «me
@@ -1785,19 +1941,19 @@ cmd
 buf
 );
 
-189  
+231  
 TRUE
 ;
 
-193  
+235  
 FALSE
 ;
 
-194 
+236 
 	}
 }
 
-196 
+238 
 	$Exec
 (
 comm™dT
@@ -1809,11 +1965,11 @@ boﬁ
 f‹˚F‹k
 )
 
-198 if(
+240 if(
 f‹˚F‹k
 ){
 
-199 
+241 
 pid_t
  
 pid
@@ -1821,21 +1977,21 @@ pid
 	`f‹k
 ();
 
-200 if(
+242 if(
 pid
 <0){
 
-201 
+243 
 	`Ârötf
 (
 °dîr
 ,"fork() failedát Exec().\n");
 
-204 if(
+246 if(
 pid
  ==0){
 
-205 
+247 
 	`execv
 (
 cmd
@@ -1845,17 +2001,117 @@ cmd
 ¨gv
 );
 
-208 
-	`waô
-(
+249 i‡(
+cmd
+ -> 
+bg
+ == 1) {
+
+252 
+bgjobL
+ *
+bgjob
+ = (bgjobL*Ë
+	`mÆloc
+ ((bgjobL));
+
+253 
+bgjob
+ -> 
+pid
+ =Öid;
+
+254 
+bgjob
+ -> 
+√xt
+ = 
 NULL
+;
+
+256 
+bgJobNumbî
+ = 0;
+
+258 i‡(
+bgjobs
+ =
+NULL
+){
+
+259 
+bgjobs
+ = (
+bgjobL
+ *)
+	`mÆloc
+((bgjobL));
+
+261 
+bgjobL
+ *
+cuºít
+ = 
+bgjobs
+;
+
+263 i‡(
+cuºít
+ -> 
+√xt
+ =
+NULL
+) {
+
+264 
+cuºít
+ -> 
+√xt
+ = 
+bgjob
+;
+
+265 
+bgJobNumbî
+++;
+
+268 
+cuºít
+ = cuºíà-> 
+√xt
+;
+
+269 
+bgJobNumbî
+++;
+
+271 
+	`¥ötf
+("[%d] %d \n", 
+bgJobNumbî
+, 
+pid
 );
 
-212 
+274 
+fg_job
+ = 
+pid
+;
+
+275 
+	`waôpid
+(-1,
+NULL
+,
+WUNTRACED
+);
+
+280 
 	}
 }
 
-214 
+282 
 boﬁ
  
 	$IsBuûtIn
@@ -1863,15 +2119,47 @@ boﬁ
 cmd
 )
 
-216  
+285 i‡(
+	`°rcmp
+(
+cmd
+, "bg"Ë=0Ë 
+TRUE
+;
+
+286 i‡(
+	`°rcmp
+(
+cmd
+, "fg"Ë=0Ë 
+TRUE
+;
+
+287 i‡(
+	`°rcmp
+(
+cmd
+, "jobs"Ë=0Ë 
+TRUE
+;
+
+288 i‡(
+	`°rcmp
+(
+cmd
+, "Æüs"Ë=0Ë 
+TRUE
+;
+
+289  
 FALSE
 ;
 
-217 
+290 
 	}
 }
 
-220 
+293 
 	$RunBuûtInCmd
 (
 comm™dT
@@ -1879,19 +2167,103 @@ comm™dT
 cmd
 )
 
-222 
+296 i‡(
+	`°rcmp
+(
+cmd
+ -> 
+cmdlöe
+, "bg") == 0) {
+
+297 if(
+bgjobs
+ =
+NULL
+ || bgjobs->
+√xt
+==NULL)
+
+299 
+pid
+ = 
+bgjobs
+->
+√xt
+->pid;
+
+300 
+	`kûl
+(
+pid
+, 
+SIGCONT
+);
+
+303 i‡(
+	`°rcmp
+(
+cmd
+ -> 
+cmdlöe
+, "jobs") == 0) {
+
+304 if(
+bgjobs
+ =
+NULL
+ || bgjobs->
+√xt
+==NULL)
+
+307 
+bgjobL
+ * 
+p
+
+bgjobs
+->
+√xt
+;
+
+309 
+	`¥ötf
+("pid:%d\n",
+p
+->
+pid
+);
+
+310 if(
+p
+->
+√xt
+==
+NULL
+)
+
+312 
+p
+ı->
+√xt
+;
+
+317 
 	}
 }
 
-224 
+319 
 	$CheckJobs
 ()
 
-226 
+321 
+	`PrötBGJobs
+();
+
+322 
 	}
 }
 
-229 
+325 
 comm™dT
 * 
 	$Cª©eCmdT
@@ -1899,11 +2271,11 @@ comm™dT
 n
 )
 
-231 
+327 
 i
 ;
 
-232 
+328 
 comm™dT
  * 
 cd
@@ -1913,7 +2285,7 @@ cd
 n
  + 1));
 
-233 
+329 
 cd
  -> 
 «me
@@ -1921,7 +2293,7 @@ cd
 NULL
 ;
 
-234 
+330 
 cd
  -> 
 cmdlöe
@@ -1929,7 +2301,7 @@ cmdlöe
 NULL
 ;
 
-235 
+331 
 cd
  -> 
 is_ªdúe˘_ö
@@ -1937,7 +2309,7 @@ is_ªdúe˘_ö
 is_ªdúe˘_out
  = 0;
 
-236 
+332 
 cd
  -> 
 ªdúe˘_ö
@@ -1947,7 +2319,7 @@ cd
 NULL
 ;
 
-237 
+333 
 cd
  -> 
 ¨gc
@@ -1955,13 +2327,13 @@ cd
 n
 ;
 
-238 
+334 
 i
  = 0; i <=
 n
 ; i++)
 
-239 
+335 
 cd
  -> 
 ¨gv
@@ -1971,15 +2343,15 @@ i
 NULL
 ;
 
-240  
+336  
 cd
 ;
 
-241 
+337 
 	}
 }
 
-244 
+340 
 	$Rñó£CmdT
 (
 comm™dT
@@ -1987,11 +2359,11 @@ comm™dT
 cmd
 ){
 
-245 
+341 
 i
 ;
 
-246 if((*
+342 if((*
 cmd
 )->
 «me
@@ -2001,7 +2373,7 @@ NULL
 	`‰ì
 ((*cmd)->name);
 
-247 if((*
+343 if((*
 cmd
 )->
 cmdlöe
@@ -2011,7 +2383,7 @@ NULL
 	`‰ì
 ((*cmd)->cmdline);
 
-248 if((*
+344 if((*
 cmd
 )->
 ªdúe˘_ö
@@ -2021,7 +2393,7 @@ NULL
 	`‰ì
 ((*cmd)->redirect_in);
 
-249 if((*
+345 if((*
 cmd
 )->
 ªdúe˘_out
@@ -2031,7 +2403,7 @@ NULL
 	`‰ì
 ((*cmd)->redirect_out);
 
-250 
+346 
 i
  = 0; i < (*
 cmd
@@ -2039,7 +2411,7 @@ cmd
 ¨gc
 ; i++)
 
-251 if((*
+347 if((*
 cmd
 )->
 ¨gv
@@ -2051,13 +2423,91 @@ NULL
 	`‰ì
 ((*cmd)->argv[i]);
 
-252 
+348 
 	`‰ì
 (*
 cmd
 );
 
-253 
+349 
+	}
+}
+
+352 
+	$PrötBGJobs
+() {
+
+353 i‡(
+bgjobs
+ =
+NULL
+) ;
+
+354 
+bgjobL
+* 
+hód
+ = 
+bgjobs
+;
+
+355 i‡(
+hód
+->
+√xt
+ =
+NULL
+) {
+
+356 
+	`¥ötf
+("No background job!");
+
+360 
+bgjobL
+ *
+cuºít
+ = 
+hód
+->
+√xt
+;
+
+361 
+cou¡
+ = 0;
+
+363 i‡(
+cuºít
+ -> 
+√xt
+ =
+NULL
+) {
+
+364 
+	`¥ötf
+ ("Job id: %d \n", 
+cou¡
+);
+
+367 
+	`¥ötf
+ ("Job id: %d \n", 
+cou¡
+ );
+
+368 
+cuºít
+ = cuºíà-> 
+√xt
+;
+
+369 
+cou¡
+++;
+
+371 
 	}
 }
 
@@ -2161,6 +2611,10 @@ y
 	tcomm™dT
 ;
 
+66 
+	gfg_job
+;
+
 74 
 VAREXTERN
 (
@@ -2193,7 +2647,7 @@ EXTERN
 RunCmdPùe
 (
 comm™dT
-*, commandT*);
+**, );
 
 112 
 EXTERN
@@ -2251,6 +2705,102 @@ EXTERN
 CheckJobs
 ();
 
+	@test.c
+
+2 
+	~<uni°d.h
+>
+
+3 
+	~<sys/ty≥s.h
+>
+
+4 
+	~<î∫o.h
+>
+
+5 
+	~<°dio.h
+>
+
+6 
+	~<sys/waô.h
+>
+
+7 
+	~<°dlib.h
+>
+
+9 
+	$maö
+()
+
+11 
+pid_t
+ 
+chûdpid
+;
+
+12 
+ªtvÆ
+;
+
+13 
+°©us
+;
+
+20 
+chûdpid
+ = 
+	`f‹k
+();
+
+22 i‡(
+chûdpid
+ >= 0)
+
+24 i‡(
+chûdpid
+ == 0)
+
+27 
+	`exe˛p
+("/bö/ls","ls", 
+NULL
+);
+
+28 
+	`¥ötf
+("helloworld\n");
+
+32 
+	`waô
+(
+NULL
+);
+
+34 
+	`¥ötf
+("test\n");
+
+35 
+	`fÊush
+(
+°dout
+);
+
+39 
+	`≥º‹
+("fork");
+
+40 
+	`exô
+(0);
+
+42 
+	}
+}
+
 	@tsh.c
 
 31 
@@ -2301,6 +2851,10 @@ CheckJobs
 sig
 ();
 
+58 
+fg_job
+;
+
 63 
 	$maö
  (
@@ -2341,21 +2895,21 @@ SIG_ERR
 	`PrötPEº‹
 ("SIGTSTP");
 
-72 !
+73 !
 f‹˚Exô
 )
 
-75 
+76 
 	`¥ötf
 ("Hao@tsh>");
 
-76 
+77 
 	`fÊush
 (
 °dout
 );
 
-77 
+78 
 	`gëComm™dLöe
 (&
 cmdLöe
@@ -2363,45 +2917,133 @@ cmdLöe
 BUFSIZE
 );
 
-79 if(
+80 if(
 	`°rcmp
 (
 cmdLöe
 , "exit") == 0)
 
-81 
+82 
 f‹˚Exô
 =
 TRUE
 ;
 
-86 
+87 
 	`CheckJobs
 ();
 
-90 
+91 
 	`I¡î¥ë
 (
 cmdLöe
 );
 
-95 
+96 
 	`‰ì
 (
 cmdLöe
 );
 
-97 
+98 
 	}
 }
 
-99 
+100 
 	$sig
 (
 signo
 )
 
-101 
+102 if(
+signo
+ =
+SIGINT
+)
+
+104 if(
+fg_job
+){
+
+105 
+	`kûl
+(-
+fg_job
+,
+SIGINT
+);
+
+106 
+fg_job
+ = 0;
+
+111 if–
+signo
+ ==
+SIGTSTP
+ ) {
+
+112 if(
+fg_job
+){
+
+113 
+	`kûl
+(-
+fg_job
+,
+SIGTSTP
+);
+
+114 
+	`¥ötf
+("[%i] St›≥d. \n", 
+fg_job
+);
+
+115 
+	`fÊush
+(
+°dout
+);
+
+116 
+fg_job
+ = 0;
+
+121 if(
+signo
+ =
+SIGCHLD
+){
+
+122 
+pid_t
+ 
+pid
+;
+
+123 
+pid
+ = 
+	`waôpid
+(-1, 
+NULL
+, 
+WNOHANG
+ ),Öid>0){
+
+124 i‡(
+pid
+ =
+fg_job
+){
+
+125 
+fg_job
+ = 0;
+
+134 
 	}
 }
 
@@ -27768,8 +28410,8 @@ __END_DECLS
 .
 1
 /usr/include
-32
-588
+33
+595
 config.h
 interpreter.c
 interpreter.h
@@ -27777,6 +28419,7 @@ io.c
 io.h
 runtime.c
 runtime.h
+test.c
 tsh.c
 tsh.h
 /usr/include/assert.h
