@@ -63,17 +63,18 @@
   /************Global Variables*********************************************/
 
 	#define NBUILTINCOMMANDS (sizeof BuiltInCommands / sizeof(char*))
-
+/*
     typedef struct alias_l {
         char* key;
         char* value;
         struct alias_l* next;
     } aliasL;  
-
+*/
 	/* the pids of the background processes */
-    bgjobL *bgjobs =NULL;
-    aliasL *aliasList = NULL;
+    bgjobL *bgjobs = NULL;
+  //  aliasL *aliasList = NULL;
     int fg_job = 0;
+    char * fgCmd = NULL;
     /************Function Prototypes******************************************/
 	/* run command */
 	static void RunCmdFork(commandT*, bool);
@@ -89,15 +90,15 @@
 	static bool IsBuiltIn(char*);
   /************External Declaration*****************************************/
     /*Util function to debug;*/
-    static void PrintBGJobs();
+    // static void PrintBGJobs();
     /*pop and push a job from and into bgjob list*/
     static int PopBGJob();
-    static int PushBGJob();
+    //static int PushBGJob();
     /*Alias and Unalias functions*/
-    static void PrintAlias();
-    static void AddAlias(commandT*);
-    static bool isAlias(commandT* cmd);
-    static commandT* ParseAliasCmd(commandT* cmd);
+  //  static void PrintAlias();
+  //  static void AddAlias(commandT*);
+  //  static bool isAlias(commandT* cmd);
+   // static commandT* ParseAliasCmd(commandT* cmd);
 /**************Implementation***********************************************/
     int total_task;
 	void RunCmd(commandT** cmd, int n)
@@ -145,15 +146,17 @@
         } 
     }
     
-    pipe(A_B);
+    int nnd = pipe(A_B);
+    if(nnd< 0) ;
 
     pid_t pid = fork();
     if ( pid == 0 ) {//1st child proc: A
         dup2(A_B[1], 1); //stdout
         execv(cmd[0]->name, cmd[0]->argv);
-    } 
+    	exit(0);
+	} 
     
-    close(A_B[1]);
+    //close(A_B[1]);
     
     for(i=1;i<n;i++){
         //fds for 2 process;
@@ -164,17 +167,19 @@
             if(i!=n-1){
                 dup2(A_B[1], 1); // stdout
                 execv(cmd[i]->name, cmd[i]->argv);
-            } else {
+        	exit(0);    
+	} else {
                 execv(cmd[i]->name, cmd[i]->argv);
             }
         }
-        close(A_B[1]);
+        	close(A_B[1]);
     }
 
     i = 0; // parent process wait for each child proc.
     for(; i < n; i++) {
         wait(NULL);
     }
+
 
 }
 
@@ -294,6 +299,7 @@ static bool ResolveExternalCmd(commandT* cmd)
                     close(fd_in);
                     close(defin);
                 }
+		fflush(stdout);
 		exit(0);
             }else { // parent process.
                 if (cmd -> bg == 1) { //A command with &, so parent will keep executing.
@@ -302,24 +308,34 @@ static bool ResolveExternalCmd(commandT* cmd)
                     bgjobL *bgjob = (bgjobL*) malloc (sizeof(bgjobL));
                     bgjob -> pid = pid;
                     bgjob -> state = RUNNING;
+		    int size = strlen(cmd->cmdline);
+		    char * pa = malloc(size+1);
+ 		    strcpy(pa, cmd->cmdline);
+	            //pa[size] = '&';
+                    //pa[size+1] ='\0';
+		    bgjob -> cmd = pa;
                     bgjob -> next = NULL;
-
-                    int bgJobNumber = 0;
 		    AddToBgJobs(bgjob);
 
-                    bgjobL *current = bgjobs->next;
+                    //int bgJobNumber = 0;
+                    /*bgjobL *current = bgjobs->next;
                     while (1) {
                         bgJobNumber++;
                         if (current -> next == NULL) {
                             break;
                         }
                         current = current -> next;
-                    } 
-                    printf("[%d] %d \n", bgJobNumber, pid); 
+                    } */
+                    //printf("[%d] %d \n", bgJobNumber, pid); 
                 
                 } else { // Parent process wait for child terminate.
                     fg_job = pid;
-                    waitpid(-1,NULL,WUNTRACED);
+                    if(fgCmd!=NULL)
+			free(fgCmd);
+		    int size = strlen (cmd->cmdline);
+		fgCmd = malloc(size+1);
+		strcpy(fgCmd, cmd->cmdline); 
+		   waitpid(-1,NULL,WUNTRACED);
                 }
             }
 
@@ -370,15 +386,12 @@ static bool ResolveExternalCmd(commandT* cmd)
                     return;
                 
                 if (cmd -> argc == 1) // no arg, find most recent one.
-                    pid = bgjobs->next->pid;
-                else 
-                    pid = atoi(cmd -> argv[1]);
+                    job_num = 1;
+                else
+		    job_num = atoi(cmd->argv[1]);
                 
-                if ((job_num = PopBGJob(pid)) < 0) {
-                    printf("No such job: %d", pid);
-                    return;
-                }
-
+                if (( pid = PopBGJob( job_num)) < 0) 
+                    		return;
                 fg_job = pid;
                 waitpid(pid, NULL, 0 );
                 return;
@@ -389,9 +402,13 @@ static bool ResolveExternalCmd(commandT* cmd)
                     return;
                 else {
                     bgjobL * p= bgjobs->next;
+		    int job_num = 1;
                     while(1){
-                        printf("pid:%d\n",p->pid);
-                        if(p->next==NULL)
+			if(p->state == RUNNING)
+                        	printf("[%d]   %s                    %s&\n",job_num++, "Running",p->cmd);
+                        else if(p->state == STOPPED)
+                        	printf("[%d]   %s                    %s\n",job_num++, "Stopped",p->cmd);
+			if(p->next==NULL)
                             break;
                         p=p->next;
                     }            
@@ -404,7 +421,7 @@ static bool ResolveExternalCmd(commandT* cmd)
              *For alias and unalias commands;
              *
              * ************************************/
-            if (strcmp(cmd -> argv[0], "alias") == 0) {
+            /*if (strcmp(cmd -> argv[0], "alias") == 0) {
                 printf("cmdline: %s \n", cmd->cmdline);
                 printf("argv1: %s \n", cmd->argv[0]);
                 printf("argv2: %s \n", cmd->argv[1]);
@@ -414,70 +431,68 @@ static bool ResolveExternalCmd(commandT* cmd)
                     PrintAlias();
                 else 
                     AddAlias(cmd);
-            }
+            }*/
 
             if (strcmp(cmd -> argv[0], "unalias") == 0) {}          
 	}
 
-    int PopBGJob(pid_t pid) { //Pop a job from bgjobs list and return its job number;
-        int job_num = 1;
-        if (bgjobs == NULL || bgjobs -> next == NULL) 
-            return -1;
-        bgjobL *parent = bgjobs;
-        bgjobL *current = parent -> next;
-        
-        while (current != NULL) {
-            if (pid == current -> pid) {// find the job.
-                parent -> next = current -> next;
-                current = parent -> next;
-                return job_num;
-            }
-            current = current -> next;
-            parent = parent -> next;
-            job_num++;
-        }       
-        return -1; // Failed to find a job by pid;
-    }
+int PopBGJob(int n) { //Pop a job from bgjobs list and return its pid;
+	bgjobL *p= bgjobs->next, *pre = bgjobs;
+	while(n--){
+		p= p->next;
+		pre= p->next;
+	}
+	pre->next = p->next;
+	int pid = p->pid;
+	free(p->cmd);
+	free(p);	
+	return pid;
+}
 
-    int PushBGJob(pid_t pid) { // Push a into bgjob list and return its jobs number;
+    /*int PushBGJob(pid_t pid) { // Push a into bgjob list and return its jobs number;
         return 0;
-    }
+    }*/
 
-    void AddToBgJobs(bgjobL *p){
+    int AddToBgJobs(bgjobL *p){
         if(bgjobs==NULL){
             bgjobs = malloc(sizeof(bgjobL));
             bgjobs->next = p;
-            return;
+            return 1;
         }
-        bgjobL *p_job = bgjobs->next; 
-        bgjobs->next = p;
-        p->next = p_job;
+	int num = 0;
+	bgjobL *pt = bgjobs;
+	while(pt->next !=NULL){
+		pt=pt->next;
+		num++;
+	}
+
+        pt->next = p;
+	return num;
     }
 
     void CheckJobs()
-	{
-           //PrintBGJobs();
-        int job_num = 1;
-        int pid = 0;
-        if (bgjobs == NULL || bgjobs -> next == NULL) 
-            return;
-        bgjobL *parent = bgjobs;
-        bgjobL *current = parent -> next;
-        
-        while (current != NULL) {
-            pid = waitpid(-1, NULL, WNOHANG);
-            if (pid != 0) {// find the job.
-                printf("[%d] Done    %d \n", job_num, pid);
+{
+	//PrintBGJobs();
+	int job_num = 1;
+	int pid = 0;
+	if (bgjobs == NULL || bgjobs -> next == NULL) 
+		return;
+	bgjobL *parent = bgjobs;
+	bgjobL *current = parent -> next;
 
-                parent -> next = current -> next; // Remove form list;
-                current = parent -> next;
-                return;
-            }
-            current = current -> next;
-            parent = parent -> next;
-            job_num++;
-        }       
- 	}
+	while (current != NULL) {
+		if(current->state == DONE){
+			printf("[%d]   %s                    %s\n",job_num, "Done",current->cmd);
+			fflush(stdout);
+			parent->next = current->next;
+			free(current->cmd);
+			free(current);
+		}
+		current = current -> next;
+		parent = parent -> next;
+		job_num++;
+	}       
+}
 
 
 commandT* CreateCmdT(int n)
@@ -507,6 +522,7 @@ void ReleaseCmdT(commandT **cmd){
 }
 
 /*********************Utils****************************************/
+/*
 void PrintBGJobs() {
     if (bgjobs == NULL) return;
     bgjobL* head = bgjobs;
@@ -526,8 +542,8 @@ void PrintBGJobs() {
         current = current -> next;
         count++;
     } 
-}
-
+}*/
+/*
 void PrintAlias() {
     return;
 }
@@ -627,3 +643,4 @@ commandT* ParseAliasCmd(commandT* cmd) {
     freeCommand(cmd);
     return new_cmd;    
 }
+*/

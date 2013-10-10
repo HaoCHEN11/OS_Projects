@@ -63,13 +63,12 @@
       int argc;
       char* argv[];
 	} commandT;
-    int fg_job;
-    
-    typedef enum {RUNNING, STOPPED} status;
+ 
+    typedef enum {RUNNING, STOPPED, DONE} status;
 	typedef struct bgjob_l {
 		pid_t pid;
         status state;
-		const char * cmd;
+		char * cmd;
         struct bgjob_l* next;
 	} bgjobL;
   /************Global Variables*********************************************/
@@ -183,7 +182,7 @@
 	EXTERN void CheckJobs();
 	
   /************External Declaration*****************************************/
-
+	EXTERN int AddToBgJobs(bgjobL *p);
 /**************Definition***************************************************/
 
 #endif /* __RUNTIME_H__ */

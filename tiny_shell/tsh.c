@@ -34,7 +34,8 @@
 	#include <stdlib.h>
 	#include <signal.h>
         #include <string.h>
-    #include <stdio.h>
+#include <unistd.h>    
+#include <stdio.h>
   /************Private include**********************************************/
 	#include "tsh.h"
 	#include "io.h"
@@ -55,8 +56,9 @@
   /************Function Prototypes******************************************/
 	/* handles SIGINT and SIGSTOP signals */	
 	static void sig(int);
-    extern int fg_job;
-    extern bgjobL *bgjobs;
+	extern int fg_job;
+	extern char * fgCmd;    
+	extern bgjobL *bgjobs;
   /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
@@ -69,7 +71,7 @@ int main (int argc, char *argv[])
 	/* shell initialization */
 	if (signal(SIGINT, sig) == SIG_ERR) PrintPError("SIGINT");
 	if (signal(SIGTSTP, sig) == SIG_ERR) PrintPError("SIGTSTP");
-	//if (signal(SIGCHLD, sig) == SIG_ERR) PrintPError("SIGCHLD");
+	if (signal(SIGCHLD, sig) == SIG_ERR) PrintPError("SIGCHLD");
 
 	while (!forceExit) /* repeat forever */
 	{
@@ -78,9 +80,8 @@ int main (int argc, char *argv[])
 
 		if(strcmp(cmdLine, "exit") == 0)
 		{
-			break;
-			//forceExit=TRUE;
-			//continue;
+			forceExit=TRUE;
+			continue;
 		}
 
 		/* checks the status of background jobs */
@@ -96,14 +97,17 @@ int main (int argc, char *argv[])
 		bgjobL * tmp;
 		while(p!=NULL){
 			tmp = p->next;
-			if(p->state == RUNNING)
-				kill(-p->pid,SIGINT);
+			//if(p->state == RUNNING)
+			//	kill(-p->pid,SIGINT);
+			free(p->cmd);
 			free(p);
 			p = tmp;    
 		}    
 	}
 	/* shell termination */
 	free(cmdLine);
+	fflush(stdout);
+	//sleep(1);
 	return 0;
 } /* end main */
 
@@ -122,26 +126,63 @@ static void sig(int signo)
         if(fg_job){
             kill(-fg_job,SIGTSTP);
             bgjobL *p = (bgjobL *)malloc(sizeof(bgjobL));
-            p->pid = fg_job;
+		/*
+            int size = strlen(p->cmdline);
+		    char * pa = malloc(size+2);
+ 		    strcpy(pa, cmd->cmdline);
+	            pa[size] = '&';
+                    pa[size+1] ='\0';
+		    bgjob -> cmd = pa;
+	    */
+	    p->cmd = fgCmd;
+	    p->pid = fg_job;
             p->state = STOPPED;
             AddToBgJobs(p);
-            printf("[%i]   Stopped. \n", fg_job);
-            fflush(stdout);
+            //printf("[%i]   Stopped. \n", fg_job);
+            //fflush(stdout);
             fg_job = 0;
+	    fgCmd = NULL;
         }
         return;
     }           
     
     if(signo == SIGCHLD){
-        pid_t pid;
-        while(pid = waitpid(-1, NULL, WNOHANG ), pid>0){
-            if (pid == fg_job){ 
-                fg_job = 0;
-                return;
-            }
-            else {
-            }
-        } 
+	    pid_t pid = 1;
+	    int status;
+	    while(  pid >0 ){
+		    pid = waitpid(-1, &status, WNOHANG );
+		    if(WIFEXITED(status)){
+			    if (pid == fg_job){ 
+				    fg_job = 0;
+				    return;
+			    } else {
+				    if(bgjobs == NULL || bgjobs->next==NULL)
+					    return;
+				    else {
+					    bgjobL * p= bgjobs->next;
+					    bgjobL * pre = bgjobs;		
+					    int job_num = 1;
+					    while(p!=NULL){
+						    if(p->pid == pid){
+							    //printf("[%d]   %s                    %s\n",job_num, "Done",p->cmd);
+							    //pre->next = p->next;
+							    //free(p->cmd);
+							    //free(p);
+							    p->state = DONE;
+							    return;
+						    }
+						    job_num++;
+						    if(p->next==NULL)
+							    break;
+						    pre = p;
+						    p=p->next;
+
+					    }            
+				    }
+
+			    }
+		    }
+	    } 
 
     } 
                                             
