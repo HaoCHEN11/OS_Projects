@@ -313,22 +313,9 @@ static void Exec(commandT* cmd, bool forceFork)
                 int size = strlen(cmd->cmdline);
                 char * pa = malloc(size+1);
                 strcpy(pa, cmd->cmdline);
-                //pa[size] = '&';
-                //pa[size+1] ='\0';
                 bgjob -> cmd = pa;
                 bgjob -> next = NULL;
                 AddToBgJobs(bgjob);
-
-                //int bgJobNumber = 0;
-                /*bgjobL *current = bgjobs->next;
-                  while (1) {
-                  bgJobNumber++;
-                  if (current -> next == NULL) {
-                  break;
-                  }
-                  current = current -> next;
-                  } */
-                //printf("[%d] %d \n", bgJobNumber, pid); 
 
             } else { // Parent process wait for child terminate.
                 fg_job = pid;
@@ -357,7 +344,6 @@ static bool IsBuiltIn(char* cmd)
 
 static void RunBuiltInCmd(commandT* cmd)
 {
-    //NEED modified;
     if (strcmp(cmd -> argv[0], "bg") == 0) {
         if(bgjobs == NULL || bgjobs->next==NULL)
             return;
@@ -374,9 +360,7 @@ static void RunBuiltInCmd(commandT* cmd)
             job_num = atoi(cmd -> argv[1]);
         }
         bgjobL *p = bgjobs;
-        while(job_num--){
-            if(p->next ==NULL)
-                break;
+        while(job_num-- && p->next !=NULL){
             p = p->next;
         }
 
@@ -399,8 +383,7 @@ static void RunBuiltInCmd(commandT* cmd)
                 p = p->next;    
             }
         }
-        else
-            job_num = atoi(cmd->argv[1]);
+        else job_num = atoi(cmd->argv[1]);
 
         if (( pid = PopBGJob( job_num)) < 0) 
             return;
@@ -461,9 +444,9 @@ static void RunBuiltInCmd(commandT* cmd)
 
 int PopBGJob(int n) { //Pop a job from bgjobs list and return its pid;
     bgjobL *p= bgjobs->next, *pre = bgjobs;
-    while(n--){
+    while(--n){
         p= p->next;
-        pre= p->next;
+        pre= pre->next;
     }
     pre->next = p->next;
     int pid = p->pid;
@@ -495,7 +478,6 @@ int AddToBgJobs(bgjobL *p){
 
 void CheckJobs()
 {
-    //PrintBGJobs();
     int job_num = 1;
     int pid = 0;
     if (bgjobs == NULL || bgjobs -> next == NULL) 
@@ -516,7 +498,6 @@ void CheckJobs()
         job_num++;
     }       
 }
-
 
 commandT* CreateCmdT(int n)
 {
