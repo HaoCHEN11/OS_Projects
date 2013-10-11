@@ -388,7 +388,7 @@ static void RunBuiltInCmd(commandT* cmd)
             }
         }
         else job_num = atoi(cmd->argv[1]);
-
+       return; 
         if (( pid = PopBGJob( job_num)) < 0) 
             return;
         fg_job = pid;
@@ -404,7 +404,7 @@ static void RunBuiltInCmd(commandT* cmd)
             int job_num = 1;
             while(1){
                 if(p->state == RUNNING)
-                    printf("[%d]   %s                    %s&\n",job_num++, "Running",p->cmd);
+                    printf("[%d]   %s                 %s&\n",job_num++, "Running",p->cmd);
                 else if(p->state == STOPPED)
                     printf("[%d]   %s                    %s\n",job_num++, "Stopped",p->cmd);
                 
@@ -498,6 +498,7 @@ void CheckJobs()
             parent->next = current->next;
             free(current->cmd);
             free(current);
+            //current = parent->next;
         }
         current = current -> next;
         parent = parent -> next;
