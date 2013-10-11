@@ -364,20 +364,20 @@ static void RunBuiltInCmd(commandT* cmd)
         }
 
         bgjobL *p = bgjobs;
-        while(p->next !=NULL){
-            if(p->job_id == job_num) {
-		p->state = RUNNING;
+		while(p->next !=NULL){
+			if(p->job_id == job_num) {
+				p->state = STOPPED;
 				break;
-	    }
+			}
 			p = p->next;
-        }
+		}
 		if(p->job_id!=job_num){
 			printf("job not found[bg]\n");
 			fflush(stdout);
 			return;
 		}
         kill(p->pid, SIGCONT);
-
+		p->state = RUNNING;
 		//printf("[%d]   %s                 %s&\n",p->job_id, "Running",p->cmd);
 		//fflush();
         return;
@@ -415,8 +415,13 @@ static void RunBuiltInCmd(commandT* cmd)
         else {
             bgjobL * p= bgjobs->next;
             while(1){
-                if(p->state == RUNNING)
-                    printf("[%d]   %s                 %s&\n",p->job_id, "Running",p->cmd);
+                if(p->state == RUNNING){
+                    if(p->cmd[strlen(p->cmd)-1]==' ')
+						printf("[%d]   %s                 %s&\n",p->job_id, "Running",p->cmd);
+					else
+						printf("[%d]   %s                 %s &\n",p->job_id, "Running",p->cmd);
+
+				}
                 else if(p->state == STOPPED)
                     printf("[%d]   %s                 %s\n",p->job_id, "Stopped",p->cmd);
                 else if(p->state ==DONE)
