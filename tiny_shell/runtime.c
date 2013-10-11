@@ -147,7 +147,7 @@ void RunCmdPipe(commandT** cmd, int n )
             return;   
         } 
     }
-
+    /*
     int nnd = pipe(A_B);
     if(nnd< 0) ;
 
@@ -181,7 +181,7 @@ void RunCmdPipe(commandT** cmd, int n )
     for(; i < n; i++) {
         wait(NULL);
     }
-
+    */
 
 }
 
@@ -365,8 +365,10 @@ static void RunBuiltInCmd(commandT* cmd)
 
         bgjobL *p = bgjobs;
         while(p->next !=NULL){
-            if(p->job_id == job_num)
+            if(p->job_id == job_num) {
+		p->state = RUNNING;
 				break;
+	    }
 			p = p->next;
         }
 		if(p->job_id!=job_num){
@@ -496,7 +498,7 @@ int AddToBgJobs(bgjobL *p){
     }
     pt->next = p;
 	p->job_id = pt->job_id + 1;
-    return num;
+    return p->job_id;
 }
 
 void CheckJobs()

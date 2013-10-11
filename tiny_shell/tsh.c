@@ -72,6 +72,7 @@ int main (int argc, char *argv[])
     /* shell initialization */
     if (signal(SIGINT, sig) == SIG_ERR) PrintPError("SIGINT");
     if (signal(SIGTSTP, sig) == SIG_ERR) PrintPError("SIGTSTP");
+    if (signal(SIGCONT, sig) == SIG_ERR) PrintPError("SIGCONT");
     if (signal(SIGCHLD, sigchld_handler) == SIG_ERR) PrintPError("SIGCHLD");
 
     while (!forceExit) /* repeat forever */
@@ -155,6 +156,10 @@ static void sig(int signo)
         }
         return ;
     }
+    
+    if(signo == SIGCONT) {
+	printf("fuck!");
+    } 
 
     if( signo ==SIGTSTP ) {
         if(fg_job){
@@ -162,9 +167,10 @@ static void sig(int signo)
             bgjobL *p = (bgjobL *)malloc(sizeof(bgjobL));
             p->cmd = fgCmd;
             p->pid = fg_job;
-            p->state = STOPPED;
-            AddToBgJobs(p);
-            fg_job = 0;
+            p->state = STOPPED;		
+            int job_num = AddToBgJobs(p);
+            printf("[%d]   %s                 %s\n",job_num, "Stopped", fgCmd);
+	    fg_job = 0;
             fgCmd = NULL;
         }
         return;
