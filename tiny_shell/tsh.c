@@ -60,6 +60,8 @@ static void sigchld_handler(int);
 extern int fg_job;
 extern char * fgCmd;    
 extern bgjobL *bgjobs;
+extern pid_t waitpid(pid_t pid, int *status, int options);
+
 /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/

@@ -351,7 +351,6 @@ static void RunBuiltInCmd(commandT* cmd)
     if (strcmp(cmd -> argv[0], "bg") == 0) {
         if(bgjobs == NULL || bgjobs->next==NULL)
             return;
-        int pid=-1;
         int job_num = 0;
         if (cmd -> argc == 1) {// no arg, find most recent one.
             bgjobL *p = bgjobs->next;
@@ -378,8 +377,6 @@ static void RunBuiltInCmd(commandT* cmd)
 		}
         kill(p->pid, SIGCONT);
 		p->state = RUNNING;
-		//printf("[%d]   %s                 %s&\n",p->job_id, "Running",p->cmd);
-		//fflush();
         return;
     }
 
@@ -455,17 +452,21 @@ static void RunBuiltInCmd(commandT* cmd)
       }*/
 
      // if (strcmp(cmd -> argv[0], "unalias") == 0) {}          
-      if (strcmp(cmd -> argv[0], "cd") == 0) {
-        if(cmd->argc == 1) { // go to home
-            struct passwd *pw = getpwuid(getuid());
+	if (strcmp(cmd -> argv[0], "cd") == 0) {
+		int rc;
+		if(cmd->argc == 1) { // go to home
+			struct passwd *pw = getpwuid(getuid());
 
-            const char *homedir = pw->pw_dir;
-            chdir(homedir);
-            } else {
-                chdir(cmd->argv[1]);    
-            } 
-        return;      
-    }          
+			const char *homedir = pw->pw_dir;
+			rc = chdir(homedir);
+		} else {
+			rc = chdir(cmd->argv[1]);    
+		} 
+		if(rc < 0){
+			fprintf(stderr,"cd error\n");			
+		}
+		return;      
+	}          
 }
 
 bgjobL* PopBGJob(int n) { //Pop a job from bgjobs list and return its pid;
@@ -508,7 +509,6 @@ int AddToBgJobs(bgjobL *p){
 void CheckJobs()
 {
     //int job_num = 1;
-    int pid = 0;
     if (bgjobs == NULL || bgjobs -> next == NULL) 
         return;
     bgjobL *parent = bgjobs;
