@@ -94,7 +94,7 @@ static bool IsBuiltIn(char*);
 /*Util function to debug;*/
 // static void PrintBGJobs();
 /*pop and push a job from and into bgjob list*/
-static int PopBGJob();
+static bgjobL* PopBGJob();
 //static int PushBGJob();
 /*Alias and Unalias functions*/
 //  static void PrintAlias();
@@ -385,7 +385,6 @@ static void RunBuiltInCmd(commandT* cmd)
 
     if (strcmp(cmd -> argv[0], "fg") == 0) {
         int job_num = 0;
-        int pid = 0;
 
         if(bgjobs == NULL || bgjobs->next==NULL) // No background job.
             return;
@@ -397,10 +396,13 @@ static void RunBuiltInCmd(commandT* cmd)
             }
 			job_num = p->job_id;
         } else job_num = atoi(cmd->argv[1]);
-        
-		if (( pid = PopBGJob( job_num)) < 0) 
+       
+		bgjobL *proc;
+		if (( proc = PopBGJob( job_num)) == 0) 
             return;
-        fg_job = pid;
+        fg_job = proc->pid;
+		fgCmd = proc->cmd;
+		free(proc);
         
 		// may be loop???
 		//waitpid(pid, NULL, 0 );
@@ -466,7 +468,7 @@ static void RunBuiltInCmd(commandT* cmd)
     }          
 }
 
-int PopBGJob(int n) { //Pop a job from bgjobs list and return its pid;
+bgjobL* PopBGJob(int n) { //Pop a job from bgjobs list and return its pid;
     bgjobL *p= bgjobs->next, *pre = bgjobs;
     while(p->next!=NULL){
 		if(p->job_id == n)
@@ -475,13 +477,10 @@ int PopBGJob(int n) { //Pop a job from bgjobs list and return its pid;
         pre= pre->next;
     }
 	if(p->job_id != n)
-		return -1;
+		return 0;
 
-    pre->next = p->next;
-    int pid = p->pid;
-    free(p->cmd);
-    free(p);	
-    return pid;
+    pre->next = p->next;	
+    return p;
 }
 
 /*int PushBGJob(pid_t pid) { // Push a into bgjob list and return its jobs number;
