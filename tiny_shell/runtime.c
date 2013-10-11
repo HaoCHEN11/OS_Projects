@@ -253,7 +253,10 @@ static bool ResolveExternalCmd(commandT* cmd)
     }
     return FALSE; /*The command is not found or the user don't have enough priority to run.*/
 }
-
+static void waitfg(int id){
+    while(fg_job) 
+        sleep (1);
+}
 static void Exec(commandT* cmd, bool forceFork)
 {
     if(forceFork){
@@ -263,6 +266,7 @@ static void Exec(commandT* cmd, bool forceFork)
             return;
         }
         if(pid ==0){ // child process.
+            setpgid(0, 0);
             int defout=-1;
             int fd= -1;
             if(cmd->is_redirect_out){
@@ -275,7 +279,6 @@ static void Exec(commandT* cmd, bool forceFork)
                 }
                 dup2(fd, 1);
             }
-
 
             int defin = -1;
             int fd_in = -1;
@@ -306,6 +309,8 @@ static void Exec(commandT* cmd, bool forceFork)
         }else { // parent process.
             if (cmd -> bg == 1) { //A command with &, so parent will keep executing.
                 //Append the child process into list;
+                
+                //printf("childPID:%d\n",pid);
 
                 bgjobL *bgjob = (bgjobL*) malloc (sizeof(bgjobL));
                 bgjob -> pid = pid;
@@ -316,7 +321,6 @@ static void Exec(commandT* cmd, bool forceFork)
                 bgjob -> cmd = pa;
                 bgjob -> next = NULL;
                 AddToBgJobs(bgjob);
-
             } else { // Parent process wait for child terminate.
                 fg_job = pid;
                 if(fgCmd!=NULL)
@@ -324,7 +328,7 @@ static void Exec(commandT* cmd, bool forceFork)
                 int size = strlen (cmd->cmdline);
                 fgCmd = malloc(size+1);
                 strcpy(fgCmd, cmd->cmdline); 
-                waitpid(-1,NULL,WUNTRACED);
+                waitfg(pid);
             }
         }
 
@@ -403,6 +407,8 @@ static void RunBuiltInCmd(commandT* cmd)
                     printf("[%d]   %s                    %s&\n",job_num++, "Running",p->cmd);
                 else if(p->state == STOPPED)
                     printf("[%d]   %s                    %s\n",job_num++, "Stopped",p->cmd);
+                
+                fflush(stdout);
                 if(p->next==NULL)
                     break;
                 p=p->next;
