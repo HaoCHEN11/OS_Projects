@@ -355,20 +355,29 @@ static void RunBuiltInCmd(commandT* cmd)
         int job_num = 0;
         if (cmd -> argc == 1) {// no arg, find most recent one.
             bgjobL *p = bgjobs->next;
-            job_num = 0;
-            while(p!=NULL){
-                job_num++;
+            while(p->next!=NULL){
                 p = p->next;    
             }
+			job_num = p->job_id;
         } else { 
             job_num = atoi(cmd -> argv[1]);
         }
-        bgjobL *p = bgjobs;
-        while(job_num-- && p->next !=NULL){
-            p = p->next;
-        }
 
+        bgjobL *p = bgjobs;
+        while(p->next !=NULL){
+            if(p->job_id == job_num)
+				break;
+			p = p->next;
+        }
+		if(p->job_id!=job_num){
+			printf("job not found[bg]\n");
+			fflush(stdout);
+			return;
+		}
         kill(p->pid, SIGCONT);
+
+		//printf("[%d]   %s                 %s&\n",p->job_id, "Running",p->cmd);
+		//fflush();
         return;
     }
 
@@ -381,19 +390,21 @@ static void RunBuiltInCmd(commandT* cmd)
 
         if (cmd -> argc == 1){ // no arg, find most recent one.
             bgjobL *p = bgjobs->next;
-            job_num = 0;
-            while(p!=NULL){
-                job_num++;
+            while(p->next!=NULL){
                 p = p->next;    
             }
-        }
-        else job_num = atoi(cmd->argv[1]);
-       return; 
-        if (( pid = PopBGJob( job_num)) < 0) 
+			job_num = p->job_id;
+        } else job_num = atoi(cmd->argv[1]);
+        
+		if (( pid = PopBGJob( job_num)) < 0) 
             return;
         fg_job = pid;
-        waitpid(pid, NULL, 0 );
-        return;
+        
+		// may be loop???
+		//waitpid(pid, NULL, 0 );
+        kill(-fg_job, SIGCONT);
+		waitfg(fg_job);
+		return;
     }
 
     if (strcmp(cmd -> cmdline, "jobs") == 0) {
@@ -401,13 +412,13 @@ static void RunBuiltInCmd(commandT* cmd)
             return;
         else {
             bgjobL * p= bgjobs->next;
-            int job_num = 1;
             while(1){
                 if(p->state == RUNNING)
-                    printf("[%d]   %s                 %s&\n",job_num++, "Running",p->cmd);
+                    printf("[%d]   %s                 %s&\n",p->job_id, "Running",p->cmd);
                 else if(p->state == STOPPED)
-                    printf("[%d]   %s                    %s\n",job_num++, "Stopped",p->cmd);
-                
+                    printf("[%d]   %s                 %s\n",p->job_id, "Stopped",p->cmd);
+                else if(p->state ==DONE)
+					printf("[%d]   %s                    %s\n",p->job_id, "Done",p->cmd);
                 fflush(stdout);
                 if(p->next==NULL)
                     break;
@@ -450,10 +461,15 @@ static void RunBuiltInCmd(commandT* cmd)
 
 int PopBGJob(int n) { //Pop a job from bgjobs list and return its pid;
     bgjobL *p= bgjobs->next, *pre = bgjobs;
-    while(--n){
+    while(p->next!=NULL){
+		if(p->job_id == n)
+			break;
         p= p->next;
         pre= pre->next;
     }
+	if(p->job_id != n)
+		return -1;
+
     pre->next = p->next;
     int pid = p->pid;
     free(p->cmd);
@@ -469,7 +485,8 @@ int AddToBgJobs(bgjobL *p){
     if(bgjobs==NULL){
         bgjobs = malloc(sizeof(bgjobL));
         bgjobs->next = p;
-        return 1;
+        p->job_id = 1;
+		return 1;
     }
     int num = 0;
     bgjobL *pt = bgjobs;
@@ -477,14 +494,14 @@ int AddToBgJobs(bgjobL *p){
         pt=pt->next;
         num++;
     }
-
     pt->next = p;
+	p->job_id = pt->job_id + 1;
     return num;
 }
 
 void CheckJobs()
 {
-    int job_num = 1;
+    //int job_num = 1;
     int pid = 0;
     if (bgjobs == NULL || bgjobs -> next == NULL) 
         return;
@@ -493,7 +510,7 @@ void CheckJobs()
 
     while (current != NULL) {
         if(current->state == DONE){
-            printf("[%d]   %s                    %s\n",job_num, "Done",current->cmd);
+            printf("[%d]   %s                    %s\n",current->job_id, "Done",current->cmd);
             fflush(stdout);
             parent->next = current->next;
             free(current->cmd);
@@ -502,7 +519,7 @@ void CheckJobs()
         }
         current = current -> next;
         parent = parent -> next;
-        job_num++;
+        //job_num++;
     }       
 }
 

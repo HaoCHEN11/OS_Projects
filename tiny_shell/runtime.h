@@ -68,6 +68,7 @@
 	typedef struct bgjob_l {
 		pid_t pid;
         status state;
+		int job_id;
 		char * cmd;
         struct bgjob_l* next;
 	} bgjobL;
