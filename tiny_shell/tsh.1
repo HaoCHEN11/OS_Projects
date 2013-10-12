@@ -1,0 +1,22 @@
+.\"This is the man page for tiny shell project.
+.\"`groff -man -Tascii tsh.1' to see the formatted man page.
+.\" NOTE: We implemented both pipe and IO redirection.
+.TH TSH 1 "NU EECS 343" "OCTOBER 2013" "Northwestern University EECS 343 Operating System - Fall 2013"
+.SH NAME 
+tsh \- A tiny shell
+.SH SYNOPSIS
+.B tsh is a shell implementation.
+.SH DESCRIPTION
+.B
+The tsh shell implements most of the project specification, but does not include alias or unalias.
+.SH BUILT-IN COMMANDS
+.IP exit,
+cd, 
+bg, 
+fg, 
+jobs
+.SH DESIGN APPROACH
+.B We choose to implement two fundamental features instead all of them so that we could build a reliable and optimized program. We also tried to 
+encapsulate and abstract functions to promote readability and reuse.
+.SH AUTHOR
+Hao CHEN and Fangzhou SUN
