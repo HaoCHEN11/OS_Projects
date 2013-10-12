@@ -147,26 +147,32 @@ void RunCmdPipe(commandT** cmd, int n )
         } 
     }
     
-    int A_B[2];
+    int A_B[2], B_C[2];
     pipe(A_B);
+    pipe(B_C);
     int pid;
     pid = fork();
+    close(B_C[0]);
+    close(B_C[1]);
 
     if (pid == 0) {
         close(A_B[0]);
         dup2(A_B[1], 1);
         execv(cmd[0] -> name, cmd[0] -> argv);
-    } close(A_B[1]);
+    } 
+    close(A_B[1]);
+    //close(A_B[0]);
 
-    //wait(NULL);
+    wait(NULL);
     pid = fork(); 
 
     if (pid == 0) {
+
         dup2(A_B[0], 0);
         execv(cmd[1] -> name, cmd[1] -> argv);
     }
 
-    wait(NULL);
+    //wait(NULL);
     wait(NULL);
 }
 
