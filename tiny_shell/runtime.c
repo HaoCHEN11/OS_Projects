@@ -139,49 +139,73 @@ void RunCmdBg(commandT* cmd)
 void RunCmdPipe(commandT** cmd, int n )
 {
     //Validate the cma1 and cmd2.
-    int i = 0;
-    int A_B[2];
-    for(i=0;i<n;i++){
-        if(!ResolveExternalCmd(cmd[i])){
-            printf("%s command not found\n", cmd[i]->argv[0]);
+    int k = 0;
+    for(k=0;k<n;k++){
+        if(!ResolveExternalCmd(cmd[k])){
+            printf("%s command not found\n", cmd[k]->argv[0]);
             return;   
         } 
     }
-    /*
-    int nnd = pipe(A_B);
-    if(nnd< 0) ;
+     int numPipes = n-1 ;
 
-    pid_t pid = fork();
-    if ( pid == 0 ) {//1st child proc: A
-        dup2(A_B[1], 1); //stdout
-        execv(cmd[0]->name, cmd[0]->argv);
-        exit(0);
-    } 
+    int status;
+    int i = 0, j = 0;
 
-    //close(A_B[1]);
+    pid_t pid;
 
-    for(i=1;i<n;i++){
-        //fds for 2 process;
-        pid = fork();
-        assert(pid >=0);
-        if (pid == 0 ) {//2nd child proc: B
-            dup2(A_B[0], 0); //stdin
-            if(i!=n-1){
-                dup2(A_B[1], 1); // stdout
-                execv(cmd[i]->name, cmd[i]->argv);
-                exit(0);    
-            } else {
-                execv(cmd[i]->name, cmd[i]->argv);
-            }
+    int pipefds[2*numPipes];
+
+    for(i = 0; i < 2*(numPipes); i++){
+        if(pipe(pipefds + i*2) < 0) {
+            perror("pipe");
+            exit(EXIT_FAILURE);
         }
-        //close(A_B[1]);
     }
 
-    i = 0; // parent process wait for each child proc.
-    for(; i < n; i++) {
-        wait(NULL);
+    int m = 0;
+    for(; m < n ; m++) {
+        pid = fork();
+        if(pid == 0) {
+
+            //if not first command
+            if(j != 0){
+                if(dup2(pipefds[(j-1) * 2], 0) < 0){
+                    perror(" dup2");///j-2 0 j+1 1
+                    exit(EXIT_FAILURE);
+                    //printf("j != 0  dup(pipefd[%d], 0])\n", j-2);
+                }
+            //if not last command
+            if(m != n-1){
+                if(dup2(pipefds[j * 2 + 1], 1) < 0){
+                    perror("dup2");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            for(i = 0; i < 2*numPipes; i++){
+                    close(pipefds[i]);
+            }
+
+            if( execv(*cmd[m]->name, cmd[m]->argv) < 0 ){
+                    perror(*cmd[m]->name);
+                    exit(EXIT_FAILURE);
+            }
+        } else if(pid < 0){
+            perror("error");
+            exit(EXIT_FAILURE);
+        }
+
+        j++;
     }
-    */
+        for(i = 0; i < 2 * numPipes; i++){
+            close(pipefds[i]);
+            puts("closed pipe in parent");
+        }
+
+        while(waitpid(0,0,0) <= 0);
+
+    }
+
 
 }
 
