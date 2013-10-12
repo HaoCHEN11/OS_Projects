@@ -146,67 +146,28 @@ void RunCmdPipe(commandT** cmd, int n )
             return;   
         } 
     }
-     int numPipes = n-1 ;
+    
+    int A_B[2];
+    pipe(A_B);
+    int pid;
+    pid = fork();
 
-    int status;
-    int i = 0, j = 0;
+    if (pid == 0) {
+        close(A_B[0]);
+        dup2(A_B[1], 1);
+        execv(cmd[0] -> name, cmd[0] -> argv);
+    } close(A_B[1]);
 
-    pid_t pid;
+    //wait(NULL);
+    pid = fork(); 
 
-    int pipefds[2*numPipes];
-
-    for(i = 0; i < 2*(numPipes); i++){
-        if(pipe(pipefds + i*2) < 0) {
-            perror("pipe");
-            exit(EXIT_FAILURE);
-        }
+    if (pid == 0) {
+        dup2(A_B[0], 0);
+        execv(cmd[1] -> name, cmd[1] -> argv);
     }
 
-    int m = 0;
-    for(; m < n ; m++) {
-        pid = fork();
-        if(pid == 0) {
-
-            //if not first command
-            if(j != 0){
-                if(dup2(pipefds[(j-1) * 2], 0) < 0){
-                    perror(" dup2");///j-2 0 j+1 1
-                    exit(EXIT_FAILURE);
-                    //printf("j != 0  dup(pipefd[%d], 0])\n", j-2);
-                }
-            //if not last command
-            if(m != n-1){
-                if(dup2(pipefds[j * 2 + 1], 1) < 0){
-                    perror("dup2");
-                    exit(EXIT_FAILURE);
-                }
-            }
-
-            for(i = 0; i < 2*numPipes; i++){
-                    close(pipefds[i]);
-            }
-
-            if( execv(*cmd[m]->name, cmd[m]->argv) < 0 ){
-                    perror(*cmd[m]->name);
-                    exit(EXIT_FAILURE);
-            }
-        } else if(pid < 0){
-            perror("error");
-            exit(EXIT_FAILURE);
-        }
-
-        j++;
-    }
-        for(i = 0; i < 2 * numPipes; i++){
-            close(pipefds[i]);
-            puts("closed pipe in parent");
-        }
-
-        while(waitpid(0,0,0) <= 0);
-
-    }
-
-
+    wait(NULL);
+    wait(NULL);
 }
 
 void RunCmdRedirOut(commandT* cmd, char* file)
